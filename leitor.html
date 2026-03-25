@@ -31,13 +31,12 @@ body {
 <div id="reader"></div>
 <p id="status">Aguardando leitura...</p>
 
-<!-- SOM -->
 <audio id="bip" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
@@ -71,6 +70,27 @@ Html5Qrcode.getCameras().then(devices => {
 
                 document.getElementById("status").innerText = "Lendo QR Code...";
 
+                const hoje = new Date().toLocaleDateString();
+
+                const q = query(
+                    collection(db, "registros"),
+                    where("codigo", "==", decodedText),
+                    where("data", "==", hoje)
+                );
+
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    document.getElementById("status").innerText = "Aluno já registrado hoje";
+                    
+                    setTimeout(() => {
+                        bloqueado = false;
+                        document.getElementById("status").innerText = "Aguardando leitura...";
+                    }, 3000);
+
+                    return;
+                }
+
                 const alunoRef = doc(db, "alunos", decodedText);
                 const alunoSnap = await getDoc(alunoRef);
 
@@ -80,20 +100,17 @@ Html5Qrcode.getCameras().then(devices => {
                     nome = alunoSnap.data().nome;
                 }
 
-                document.getElementById("status").innerText =
-                    "Registrado: " + nome;
+                document.getElementById("status").innerText = "Registrado: " + nome;
 
-                // 🔊 SOM
                 document.getElementById("bip").play();
 
                 await addDoc(collection(db, "registros"), {
                     codigo: decodedText,
                     nome: nome,
-                    data: new Date().toLocaleDateString(),
+                    data: hoje,
                     hora: new Date().toLocaleTimeString()
                 });
 
-                // trava por 3 segundos
                 setTimeout(() => {
                     bloqueado = false;
                     document.getElementById("status").innerText = "Aguardando leitura...";
