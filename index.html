@@ -29,7 +29,7 @@ body {
 <h2>Leitor de QR Code</h2>
 
 <div id="reader"></div>
-<p id="status"></p>
+<p id="status">Aguardando leitura...</p>
 
 <script type="module">
 
@@ -39,8 +39,6 @@ import {
   getFirestore,
   collection,
   addDoc,
-  query,
-  where,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -68,43 +66,31 @@ Html5Qrcode.getCameras().then(devices => {
             { fps: 10, qrbox: 250 },
             async (decodedText) => {
 
-                const hoje = new Date().toLocaleDateString();
+                document.getElementById("status").innerText = "Lido: " + decodedText;
 
-                let nome = "Desconhecido";
+                // Buscar nome do aluno
+                let nome = "Nao encontrado";
 
-                const alunosSnapshot = await getDocs(collection(db, "alunos"));
+                const alunos = await getDocs(collection(db, "alunos"));
 
-                alunosSnapshot.forEach((doc) => {
+                alunos.forEach(doc => {
                     if (doc.data().codigo == decodedText) {
                         nome = doc.data().nome;
                     }
                 });
 
-                const q = query(
-                    collection(db, "registros"),
-                    where("codigo", "==", decodedText),
-                    where("data", ">=", hoje)
-                );
+                document.getElementById("status").innerText =
+                    "Registrando: " + decodedText + " - " + nome;
 
-                const querySnapshot = await getDocs(q);
+                // Salvar no Firebase
+                await addDoc(collection(db, "registros"), {
+                    codigo: decodedText,
+                    nome: nome,
+                    data: new Date().toLocaleString()
+                });
 
-                if (querySnapshot.empty) {
-
-                    await addDoc(collection(db, "registros"), {
-                        codigo: decodedText,
-                        nome: nome,
-                        data: new Date().toLocaleString()
-                    });
-
-                    document.getElementById("status").innerText =
-                        "Registrado: " + decodedText + " - " + nome;
-
-                } else {
-
-                    document.getElementById("status").innerText =
-                        "Ja registrado hoje: " + decodedText + " - " + nome;
-
-                }
+                document.getElementById("status").innerText =
+                    "Salvo: " + decodedText + " - " + nome;
 
             },
             (errorMessage) => {}
