@@ -5,81 +5,99 @@
 <title>Histórico</title>
 
 <style>
-body {
+body{
     font-family: Arial;
-    text-align: center;
     background: #2f3a73;
     color: white;
+    text-align: center;
+    padding: 20px;
 }
 
-.card {
+.container{
     background: white;
     color: black;
-    margin: 10px;
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+.item{
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+button{
+    margin-top: 20px;
+    padding: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Histórico de Registros</h2>
+<h2>Histórico</h2>
 
-<div id="conteudo"></div>
+<div class="container" id="lista">Carregando...</div>
+
+<button onclick="voltar()">Voltar</button>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.appspot.com",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-function formatarData(data){
-    const d = new Date(data);
-    return d.toLocaleDateString();
-}
+onAuthStateChanged(auth, async (user) => {
 
-async function carregar() {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-    const querySnapshot = await getDocs(collection(db, "registros"));
+    const uid = user.uid;
+    const lista = document.getElementById("lista");
 
-    let contagem = {};
+    const snapshot = await getDocs(collection(db, "escolas", uid, "registros"));
 
-    querySnapshot.forEach((doc) => {
-        const dados = doc.data();
-        const data = dados.data;
+    lista.innerHTML = "";
 
-        if (!contagem[data]) {
-            contagem[data] = 0;
-        }
+    snapshot.forEach((doc) => {
 
-        contagem[data]++;
+        const dado = doc.data();
+
+        lista.innerHTML += `
+            <div class="item">
+                <strong>${dado.nome}</strong><br>
+                Código: ${dado.codigo}<br>
+                Data: ${dado.data}<br>
+                Hora: ${dado.hora}
+            </div>
+        `;
     });
 
-    const container = document.getElementById("conteudo");
-
-    for (let data in contagem) {
-
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerText = data + " - Total: " + contagem[data];
-
-        container.appendChild(div);
+    if(lista.innerHTML === ""){
+        lista.innerHTML = "Nenhum histórico encontrado";
     }
-}
 
-carregar();
+});
+
+window.voltar = function(){
+    window.location.href = "index.html";
+}
 
 </script>
 
