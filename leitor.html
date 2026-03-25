@@ -17,6 +17,10 @@ body {
     width: 300px;
     margin: auto;
 }
+#status {
+    margin-top: 15px;
+    font-size: 18px;
+}
 </style>
 </head>
 
@@ -25,7 +29,10 @@ body {
 <h2>Leitor de QR Code</h2>
 
 <div id="reader"></div>
-<p id="status"></p>
+<p id="status">Aguardando leitura...</p>
+
+<!-- SOM -->
+<audio id="bip" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
 <script type="module">
 
@@ -46,7 +53,7 @@ const db = getFirestore(app);
 
 const html5QrCode = new Html5Qrcode("reader");
 
-let ultimoCodigo = null;
+let bloqueado = false;
 
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
@@ -58,11 +65,11 @@ Html5Qrcode.getCameras().then(devices => {
             { fps: 10, qrbox: 250 },
             async (decodedText) => {
 
-                if(decodedText === ultimoCodigo){
-                    return;
-                }
+                if (bloqueado) return;
 
-                ultimoCodigo = decodedText;
+                bloqueado = true;
+
+                document.getElementById("status").innerText = "Lendo QR Code...";
 
                 const alunoRef = doc(db, "alunos", decodedText);
                 const alunoSnap = await getDoc(alunoRef);
@@ -74,7 +81,10 @@ Html5Qrcode.getCameras().then(devices => {
                 }
 
                 document.getElementById("status").innerText =
-                    "Lido: " + decodedText + " - " + nome;
+                    "Registrado: " + nome;
+
+                // 🔊 SOM
+                document.getElementById("bip").play();
 
                 await addDoc(collection(db, "registros"), {
                     codigo: decodedText,
@@ -83,8 +93,10 @@ Html5Qrcode.getCameras().then(devices => {
                     hora: new Date().toLocaleTimeString()
                 });
 
+                // trava por 3 segundos
                 setTimeout(() => {
-                    ultimoCodigo = null;
+                    bloqueado = false;
+                    document.getElementById("status").innerText = "Aguardando leitura...";
                 }, 3000);
             },
             (errorMessage) => {}
