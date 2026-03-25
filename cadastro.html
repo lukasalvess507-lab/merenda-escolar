@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cadastrar Aluno</title>
+
+<style>
+body{
+    font-family: Arial;
+    background: #2f3a73;
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.card{
+    background: white;
+    color: #333;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 400px;
+    margin: auto;
+}
+
+input{
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+button{
+    width: 100%;
+    padding: 12px;
+    background: #2f3a73;
+    color: white;
+    border: none;
+    border-radius: 8px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Cadastrar Aluno</h2>
+
+<div class="card">
+
+<input type="text" id="codigo" placeholder="Código (ex: 001)">
+<input type="text" id="nome" placeholder="Nome do aluno">
+
+<button onclick="cadastrar()">Salvar</button>
+
+<p id="msg"></p>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_AUTH_DOMAIN",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.appspot.com",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.cadastrar = async function(){
+
+    const codigo = document.getElementById("codigo").value;
+    const nome = document.getElementById("nome").value;
+
+    if(!codigo || !nome){
+        document.getElementById("msg").innerText = "Preencha tudo";
+        return;
+    }
+
+    await addDoc(collection(db, "alunos"), {
+        codigo: codigo,
+        nome: nome
+    });
+
+    document.getElementById("msg").innerText = "Aluno cadastrado!";
+}
+
+</script>
+
+</body>
+</html>
