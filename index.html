@@ -61,7 +61,6 @@ const html5QrCode = new Html5Qrcode("reader");
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
 
-        // 🔥 câmera traseira
         let cameraId = devices[devices.length - 1].id;
 
         html5QrCode.start(
@@ -70,6 +69,16 @@ Html5Qrcode.getCameras().then(devices => {
             async (decodedText) => {
 
                 const hoje = new Date().toLocaleDateString();
+
+                let nome = "Desconhecido";
+
+                const alunosSnapshot = await getDocs(collection(db, "alunos"));
+
+                alunosSnapshot.forEach((doc) => {
+                    if (doc.data().codigo == decodedText) {
+                        nome = doc.data().nome;
+                    }
+                });
 
                 const q = query(
                     collection(db, "registros"),
@@ -83,14 +92,17 @@ Html5Qrcode.getCameras().then(devices => {
 
                     await addDoc(collection(db, "registros"), {
                         codigo: decodedText,
+                        nome: nome,
                         data: new Date().toLocaleString()
                     });
 
-                    document.getElementById("status").innerText = "✅ Registrado: " + decodedText;
+                    document.getElementById("status").innerText =
+                        "Registrado: " + decodedText + " - " + nome;
 
                 } else {
 
-                    document.getElementById("status").innerText = "⚠️ Já registrado hoje: " + decodedText;
+                    document.getElementById("status").innerText =
+                        "Ja registrado hoje: " + decodedText + " - " + nome;
 
                 }
 
