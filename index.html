@@ -48,7 +48,7 @@ const html5QrCode = new Html5Qrcode("reader");
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
 
-        let cameraId = devices[0].id;
+        let cameraId = devices[devices.length - 1].id;
 
         html5QrCode.start(
             cameraId,
