@@ -50,7 +50,7 @@ const db = getFirestore(app);
 
 const html5QrCode = new Html5Qrcode("reader");
 
-let lendo = false; // 🔒 trava de leitura
+let lendo = false;
 
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
@@ -62,7 +62,7 @@ Html5Qrcode.getCameras().then(devices => {
             { fps: 10, qrbox: 250 },
             async (decodedText) => {
 
-                if (lendo) return; // evita repetição
+                if (lendo) return;
                 lendo = true;
 
                 document.getElementById("status").innerText = "Lido: " + decodedText;
@@ -89,7 +89,6 @@ Html5Qrcode.getCameras().then(devices => {
                 document.getElementById("status").innerText =
                     "Salvo: " + decodedText + " - " + nome;
 
-                // libera novamente depois de 3 segundos
                 setTimeout(() => {
                     lendo = false;
                 }, 3000);
