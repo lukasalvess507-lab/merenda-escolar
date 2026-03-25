@@ -2,72 +2,87 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Alunos Cadastrados</title>
+<title>Alunos</title>
 
 <style>
-body {
+body{
     font-family: Arial;
-    text-align: center;
     background: #2f3a73;
     color: white;
+    text-align: center;
+    padding: 20px;
 }
 
-.lista {
-    margin-top: 20px;
-}
-
-.item {
+.container{
     background: white;
     color: black;
-    margin: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+.aluno{
     padding: 10px;
-    border-radius: 8px;
+    border-bottom: 1px solid #ccc;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Alunos Cadastrados</h2>
+<h2>Lista de Alunos</h2>
 
-<div id="lista" class="lista"></div>
+<div class="container" id="lista"></div>
 
 <script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.appspot.com",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-async function carregar() {
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-    const querySnapshot = await getDocs(collection(db, "alunos"));
+    const uid = user.uid;
 
     const lista = document.getElementById("lista");
+    lista.innerHTML = "Carregando...";
+
+    const querySnapshot = await getDocs(collection(db, "escolas", uid, "alunos"));
+
+    lista.innerHTML = "";
 
     querySnapshot.forEach((doc) => {
-        const dados = doc.data();
+        const aluno = doc.data();
 
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerText = dados.codigo + " - " + dados.nome;
-
-        lista.appendChild(div);
+        lista.innerHTML += `
+            <div class="aluno">
+                <strong>${aluno.nome}</strong><br>
+                Código: ${aluno.codigo}
+            </div>
+        `;
     });
-}
 
-carregar();
-
+    if (lista.innerHTML === "") {
+        lista.innerHTML = "Nenhum aluno cadastrado.";
+    }
+});
 </script>
 
 </body>
