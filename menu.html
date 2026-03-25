@@ -2,80 +2,93 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Sistema Merenda Escolar</title>
+<title>Painel - Merenda Escolar</title>
 
 <style>
 body {
+    margin: 0;
     font-family: Arial;
-    background: #f5f5f5;
-    text-align: center;
-}
-
-h1 {
-    margin-top: 30px;
-}
-
-.container {
-    margin-top: 40px;
-}
-
-button {
-    display: block;
-    width: 80%;
-    max-width: 300px;
-    margin: 10px auto;
-    padding: 15px;
-    font-size: 16px;
-    border: none;
-    border-radius: 8px;
-    background: #2c7be5;
+    background: linear-gradient(135deg, #0f5132, #198754);
     color: white;
 }
 
+.container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+h1 {
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    color: #333;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 400px;
+    margin: auto;
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+    background: #198754;
+    color: white;
+    font-size: 16px;
+}
+
 button:hover {
-    background: #1a5edb;
+    background: #146c43;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Painel - Merenda Escolar</h1>
-
 <div class="container">
 
-<button onclick="abrirAlunos()">Ver Alunos</button>
+<h1>Painel Merenda Escolar</h1>
 
-<button onclick="cadastrarAluno()">Cadastrar Aluno</button>
+<div class="card">
 
 <button onclick="abrirLeitor()">Ler QR Code</button>
 
-<button onclick="verRegistros()">Ver Registros do Dia</button>
+<button onclick="cadastrarAluno()">Cadastrar Aluno</button>
+
+<button onclick="verAlunos()">Ver Alunos</button>
+
+<button onclick="verRegistros()">Registros do Dia</button>
 
 <button onclick="verHistorico()">Histórico</button>
 
 </div>
 
+</div>
+
 <script>
 
-function abrirAlunos() {
-    alert("Em breve: lista de alunos");
+function abrirLeitor() {
+    window.location.href = "leitor.html";
 }
 
 function cadastrarAluno() {
-    alert("Em breve: cadastro de alunos");
+    alert("Cadastro em construção");
 }
 
-function abrirLeitor() {
-    window.location.href = "index.html";
+function verAlunos() {
+    alert("Lista em construção");
 }
 
 function verRegistros() {
-    alert("Em breve: registros do dia");
+    alert("Registros em construção");
 }
 
 function verHistorico() {
-    alert("Em breve: histórico");
+    alert("Histórico em construção");
 }
 
 </script>
