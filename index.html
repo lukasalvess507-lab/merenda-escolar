@@ -76,6 +76,7 @@ Html5Qrcode.getCameras().then(devices => {
                 });
 
                 const hoje = new Date().toLocaleDateString();
+                const agora = new Date().toLocaleTimeString();
 
                 let jaExiste = false;
 
@@ -86,7 +87,7 @@ Html5Qrcode.getCameras().then(devices => {
 
                     if (
                         dados.codigo == decodedText &&
-                        dados.data.startsWith(hoje)
+                        dados.data == hoje
                     ) {
                         jaExiste = true;
                     }
@@ -102,7 +103,8 @@ Html5Qrcode.getCameras().then(devices => {
                     await addDoc(collection(db, "registros"), {
                         codigo: decodedText,
                         nome: nome,
-                        data: new Date().toLocaleString()
+                        data: hoje,
+                        hora: agora
                     });
 
                     document.getElementById("status").innerText =
