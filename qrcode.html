@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gerar QR Code</title>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background: #2f3a73;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.container{
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+canvas{
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Gerar QR Code</h2>
+
+<div class="container">
+
+<input type="text" id="codigo" placeholder="Digite o código do aluno (ex: 001)">
+<br><br>
+
+<button onclick="gerar()">Gerar QR Code</button>
+
+<br><br>
+<canvas id="qrcode"></canvas>
+
+</div>
+
+<script>
+
+function gerar(){
+    const codigo = document.getElementById("codigo").value;
+
+    if(!codigo){
+        alert("Digite o código");
+        return;
+    }
+
+    const canvas = document.getElementById("qrcode");
+
+    QRCode.toCanvas(canvas, codigo, function (error) {
+        if (error) console.error(error);
+    });
+}
+
+</script>
+
+</body>
+</html>
