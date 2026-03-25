@@ -73,7 +73,6 @@ onAuthStateChanged(auth, (user) => {
     const lista = document.getElementById("lista");
     const total = document.getElementById("total");
 
-    // 🔥 TEMPO REAL
     onSnapshot(collection(db, "escolas", uid, "registros"), (snapshot) => {
 
         lista.innerHTML = "";
@@ -90,7 +89,8 @@ onAuthStateChanged(auth, (user) => {
                 lista.innerHTML += `
                     <div class="item">
                         <strong>${dado.nome}</strong><br>
-                        ${dado.hora}
+                        Código: ${dado.codigo}<br>
+                        Hora: ${dado.hora}
                     </div>
                 `;
             }
