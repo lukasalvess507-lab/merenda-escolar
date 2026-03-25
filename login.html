@@ -58,16 +58,17 @@ button {
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9",
+  measurementId: "G-58NGTHZ9V2"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -82,8 +83,8 @@ window.login = function(){
     .then(() => {
         window.location.href = "index.html";
     })
-    .catch(() => {
-        document.getElementById("msg").innerText = "Erro ao entrar";
+    .catch((error) => {
+        document.getElementById("msg").innerText = error.message;
     });
 
 }
