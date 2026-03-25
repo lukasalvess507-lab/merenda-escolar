@@ -34,13 +34,7 @@ body {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
@@ -56,6 +50,8 @@ const db = getFirestore(app);
 
 const html5QrCode = new Html5Qrcode("reader");
 
+let lendo = false; // 🔒 trava de leitura
+
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
 
@@ -66,9 +62,11 @@ Html5Qrcode.getCameras().then(devices => {
             { fps: 10, qrbox: 250 },
             async (decodedText) => {
 
+                if (lendo) return; // evita repetição
+                lendo = true;
+
                 document.getElementById("status").innerText = "Lido: " + decodedText;
 
-                // Buscar nome do aluno
                 let nome = "Nao encontrado";
 
                 const alunos = await getDocs(collection(db, "alunos"));
@@ -80,9 +78,8 @@ Html5Qrcode.getCameras().then(devices => {
                 });
 
                 document.getElementById("status").innerText =
-                    "Registrando: " + decodedText + " - " + nome;
+                    "Salvando: " + decodedText + " - " + nome;
 
-                // Salvar no Firebase
                 await addDoc(collection(db, "registros"), {
                     codigo: decodedText,
                     nome: nome,
@@ -91,6 +88,11 @@ Html5Qrcode.getCameras().then(devices => {
 
                 document.getElementById("status").innerText =
                     "Salvo: " + decodedText + " - " + nome;
+
+                // libera novamente depois de 3 segundos
+                setTimeout(() => {
+                    lendo = false;
+                }, 3000);
 
             },
             (errorMessage) => {}
