@@ -63,21 +63,20 @@ const firebaseConfig = {
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9",
-  measurementId: "G-58NGTHZ9V2"
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔐 Proteção de acesso
+// 🔐 PROTEÇÃO DE LOGIN
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         window.location.href = "login.html";
     }
 });
 
-// 🚪 Logout
+// 🚪 LOGOUT
 window.logout = function(){
     signOut(auth).then(() => {
         window.location.href = "login.html";
