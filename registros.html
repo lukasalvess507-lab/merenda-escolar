@@ -5,77 +5,107 @@
 <title>Registros do Dia</title>
 
 <style>
-body {
+body{
     font-family: Arial;
-    text-align: center;
     background: #2f3a73;
     color: white;
+    text-align: center;
+    padding: 20px;
 }
-.lista {
-    margin-top: 20px;
-}
-.item {
+
+.container{
     background: white;
     color: black;
-    margin: 10px;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+.item{
     padding: 10px;
-    border-radius: 8px;
+    border-bottom: 1px solid #ccc;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Registros do Dia</h2>
+<h2>Resumo do Dia</h2>
 
-<p id="total">Carregando...</p>
+<div class="container" id="lista">Carregando...</div>
 
-<div id="lista" class="lista"></div>
+<h3 id="total"></h3>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.appspot.com",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-const hoje = new Date().toLocaleDateString();
-
-async function carregar() {
-
-    const querySnapshot = await getDocs(collection(db, "registros"));
-
-    let total = 0;
-
-    querySnapshot.forEach((doc) => {
-        const dados = doc.data();
-
-        if (dados.data === hoje) {
-
-            total++;
-
-            const div = document.createElement("div");
-            div.className = "item";
-            div.innerText = dados.nome + " - " + dados.hora;
-
-            document.getElementById("lista").appendChild(div);
-        }
-    });
-
-    document.getElementById("total").innerText = "Total hoje: " + total;
+function hoje(){
+    const d = new Date();
+    return d.toISOString().split("T")[0];
 }
 
-carregar();
+onAuthStateChanged(auth, (user) => {
+
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const uid = user.uid;
+
+    const lista = document.getElementById("lista");
+    const total = document.getElementById("total");
+
+    // 🔥 TEMPO REAL
+    onSnapshot(collection(db, "escolas", uid, "registros"), (snapshot) => {
+
+        lista.innerHTML = "";
+        let contador = 0;
+
+        snapshot.forEach((doc) => {
+
+            const dado = doc.data();
+
+            if(dado.data === hoje()){
+
+                contador++;
+
+                lista.innerHTML += `
+                    <div class="item">
+                        <strong>${dado.nome}</strong><br>
+                        ${dado.hora}
+                    </div>
+                `;
+            }
+
+        });
+
+        if(contador === 0){
+            lista.innerHTML = "Nenhum registro hoje";
+        }
+
+        total.innerText = "Total: " + contador;
+
+    });
+
+});
 
 </script>
 
