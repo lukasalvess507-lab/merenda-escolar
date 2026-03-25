@@ -37,6 +37,13 @@ button {
     border-radius: 5px;
     margin-top: 10px;
 }
+
+.link {
+    margin-top: 10px;
+    display: block;
+    color: #2f3a73;
+    cursor: pointer;
+}
 </style>
 </head>
 
@@ -52,6 +59,8 @@ button {
 <button onclick="login()">Entrar</button>
 <button onclick="cadastrar()">Criar Conta</button>
 
+<span class="link" onclick="recuperarSenha()">Esqueci minha senha</span>
+
 <p id="msg"></p>
 
 </div>
@@ -59,7 +68,12 @@ button {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -97,6 +111,25 @@ window.cadastrar = function(){
     createUserWithEmailAndPassword(auth, email, senha)
     .then(() => {
         document.getElementById("msg").innerText = "Conta criada com sucesso";
+    })
+    .catch((error) => {
+        document.getElementById("msg").innerText = error.message;
+    });
+
+}
+
+window.recuperarSenha = function(){
+
+    const email = document.getElementById("email").value;
+
+    if (!email) {
+        document.getElementById("msg").innerText = "Digite seu email primeiro";
+        return;
+    }
+
+    sendPasswordResetEmail(auth, email)
+    .then(() => {
+        document.getElementById("msg").innerText = "Email de recuperação enviado";
     })
     .catch((error) => {
         document.getElementById("msg").innerText = error.message;
