@@ -16,6 +16,11 @@ body {
     width: 300px;
     margin: auto;
 }
+#status {
+    margin-top: 15px;
+    font-size: 18px;
+    font-weight: bold;
+}
 </style>
 </head>
 
@@ -29,7 +34,15 @@ body {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
@@ -48,6 +61,7 @@ const html5QrCode = new Html5Qrcode("reader");
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
 
+        // 🔥 câmera traseira
         let cameraId = devices[devices.length - 1].id;
 
         html5QrCode.start(
@@ -55,12 +69,30 @@ Html5Qrcode.getCameras().then(devices => {
             { fps: 10, qrbox: 250 },
             async (decodedText) => {
 
-                document.getElementById("status").innerText = "Lido: " + decodedText;
+                const hoje = new Date().toLocaleDateString();
 
-                await addDoc(collection(db, "registros"), {
-                    codigo: decodedText,
-                    data: new Date().toLocaleString()
-                });
+                const q = query(
+                    collection(db, "registros"),
+                    where("codigo", "==", decodedText),
+                    where("data", ">=", hoje)
+                );
+
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+
+                    await addDoc(collection(db, "registros"), {
+                        codigo: decodedText,
+                        data: new Date().toLocaleString()
+                    });
+
+                    document.getElementById("status").innerText = "✅ Registrado: " + decodedText;
+
+                } else {
+
+                    document.getElementById("status").innerText = "⚠️ Já registrado hoje: " + decodedText;
+
+                }
 
             },
             (errorMessage) => {}
