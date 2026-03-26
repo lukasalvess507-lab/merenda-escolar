@@ -15,10 +15,22 @@ body{
     padding: 20px;
 }
 
-canvas{
+.container{
     background: white;
-    border-radius: 10px;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 500px;
+    margin: auto;
+}
+
+canvas{
+    margin-top: 20px;
+}
+
+button{
+    margin-top: 15px;
     padding: 10px;
+    width: 100%;
 }
 </style>
 </head>
@@ -27,7 +39,9 @@ canvas{
 
 <h2>Frequência da Merenda</h2>
 
-<canvas id="grafico"></canvas>
+<div class="container">
+    <canvas id="grafico"></canvas>
+</div>
 
 <button onclick="voltar()">Voltar</button>
 
@@ -57,9 +71,7 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    const uid = user.uid;
-
-    const snapshot = await getDocs(collection(db, "escolas", uid, "registros"));
+    const snapshot = await getDocs(collection(db, "escolas", user.uid, "registros"));
 
     const dadosPorDia = {};
 
@@ -82,8 +94,27 @@ onAuthStateChanged(auth, async (user) => {
             labels: labels,
             datasets: [{
                 label: 'Alunos por dia',
-                data: valores
+                data: valores,
+                backgroundColor: '#4CAF50',
+                borderRadius: 10
             }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'black'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: 'black' }
+                },
+                y: {
+                    ticks: { color: 'black' }
+                }
+            }
         }
     });
 
