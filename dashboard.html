@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<style>
+body{
+    font-family: Arial;
+    background: #2f3a73;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.card{
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 15px;
+    margin: 10px auto;
+    max-width: 400px;
+}
+
+h1{
+    font-size: 40px;
+    margin: 0;
+}
+
+button{
+    margin-top: 15px;
+    padding: 10px;
+    width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Painel Geral</h2>
+
+<div class="card">
+    <h3>Total Hoje</h3>
+    <h1 id="total">0</h1>
+</div>
+
+<div class="card" id="ultimos">
+    Carregando...
+</div>
+
+<button onclick="voltar()">Voltar</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+function hoje(){
+    return new Date().toLocaleDateString("sv-SE");
+}
+
+onAuthStateChanged(auth, (user) => {
+
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    onSnapshot(collection(db, "escolas", user.uid, "registros"), (snapshot) => {
+
+        let total = 0;
+        let lista = "";
+
+        snapshot.forEach((doc) => {
+
+            const r = doc.data();
+
+            if(r.data === hoje()){
+                total++;
+
+                lista += `<div>${r.nome} - ${r.hora}</div>`;
+            }
+
+        });
+
+        document.getElementById("total").innerText = total;
+
+        document.getElementById("ultimos").innerHTML =
+            lista || "Nenhum registro hoje";
+
+    });
+
+});
+
+window.voltar = function(){
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>
