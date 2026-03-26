@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Gráfico de Frequência</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background: #2f3a73;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+canvas{
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Frequência da Merenda</h2>
+
+<canvas id="grafico"></canvas>
+
+<button onclick="voltar()">Voltar</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, async (user) => {
+
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const uid = user.uid;
+
+    const snapshot = await getDocs(collection(db, "escolas", uid, "registros"));
+
+    const dadosPorDia = {};
+
+    snapshot.forEach((doc) => {
+        const dado = doc.data();
+
+        if(!dadosPorDia[dado.data]){
+            dadosPorDia[dado.data] = 0;
+        }
+
+        dadosPorDia[dado.data]++;
+    });
+
+    const labels = Object.keys(dadosPorDia);
+    const valores = Object.values(dadosPorDia);
+
+    new Chart(document.getElementById("grafico"), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Alunos por dia',
+                data: valores
+            }]
+        }
+    });
+
+});
+
+window.voltar = function(){
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>
