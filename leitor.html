@@ -36,6 +36,8 @@ body{
 
 <audio id="beep" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
 
+<button onclick="voltar()">Voltar</button>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -58,7 +60,12 @@ const auth = getAuth(app);
 let usuario = null;
 let lendo = false;
 
-// 🔐 garante login
+// ✅ DATA CORRIGIDA
+function hoje(){
+    const d = new Date();
+    return d.toLocaleDateString("sv-SE");
+}
+
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         window.location.href = "login.html";
@@ -68,13 +75,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// 📅 data do dia
-function hoje(){
-    const d = new Date();
-    return d.toISOString().split("T")[0];
-}
-
-// 🎥 iniciar câmera
 function iniciarCamera(){
 
     const html5QrCode = new Html5Qrcode("reader");
@@ -92,7 +92,6 @@ function iniciarCamera(){
 
                 document.getElementById("status").innerText = "Lendo...";
 
-                // 🔍 buscar aluno
                 const alunoRef = doc(db, "escolas", usuario.uid, "alunos", codigo);
                 const alunoSnap = await getDoc(alunoRef);
 
@@ -107,14 +106,12 @@ function iniciarCamera(){
                 const registroRef = doc(db, "escolas", usuario.uid, "registros", hoje()+"_"+codigo);
                 const registroSnap = await getDoc(registroRef);
 
-                // 🚫 bloqueio de repetição
                 if(registroSnap.exists()){
                     document.getElementById("status").innerText = "Já registrado hoje: " + aluno.nome;
                     lendo = false;
                     return;
                 }
 
-                // 💾 salvar registro
                 await setDoc(registroRef, {
                     codigo: codigo,
                     nome: aluno.nome,
@@ -122,12 +119,10 @@ function iniciarCamera(){
                     hora: new Date().toLocaleTimeString()
                 });
 
-                // 🔊 bip
                 document.getElementById("beep").play();
 
                 document.getElementById("status").innerText = "Registrado: " + aluno.nome;
 
-                // ⏱ liberar nova leitura
                 setTimeout(() => {
                     lendo = false;
                     document.getElementById("status").innerText = "Aguardando leitura...";
@@ -140,7 +135,11 @@ function iniciarCamera(){
 
 }
 
+window.voltar = function(){
+    window.location.href = "index.html";
+}
+
 </script>
-<button onclick="window.location.href='index.html'">Voltar</button>
+
 </body>
 </html>
