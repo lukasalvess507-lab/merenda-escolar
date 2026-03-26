@@ -10,9 +10,25 @@ body {
     background: #2f3a73;
     color: white;
     text-align: center;
-    padding: 40px;
+    padding: 30px;
 }
 
+/* TOPO */
+.topo{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 350px;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+#escola{
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* CAIXA */
 .container {
     background: white;
     padding: 20px;
@@ -21,21 +37,35 @@ body {
     margin: auto;
 }
 
+/* BOTÕES */
 button {
     width: 100%;
     padding: 15px;
-    margin: 10px 0;
+    margin: 8px 0;
     background: #2f3a73;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
+}
+
+/* BOTÃO SAIR */
+#sair{
+    width: auto;
+    padding: 6px 10px;
+    font-size: 12px;
 }
 </style>
 
 </head>
 
 <body>
+
+<!-- TOPO CORRETO -->
+<div class="topo">
+    <div id="escola">Carregando...</div>
+    <button id="sair" onclick="logout()">Sair</button>
+</div>
 
 <h2>Painel Merenda Escolar</h2>
 
@@ -48,8 +78,6 @@ button {
 <button onclick="location.href='historico.html'">Histórico</button>
 <button onclick="location.href='grafico.html'">Gráfico</button>
 <button onclick="location.href='qrcode.html'">Gerar QR Code</button>
-
-<button onclick="logout()">Sair</button>
 
 </div>
 
@@ -70,14 +98,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔐 proteção de login
+// PROTEÇÃO + NOME ESCOLA
 onAuthStateChanged(auth, (user) => {
+
     if (!user) {
         window.location.href = "login.html";
+        return;
     }
+
+    // ✅ AGORA APARECE NO MENU (CORRETO)
+    document.getElementById("escola").innerText = user.email;
+
 });
 
-// 🚪 logout
+// LOGOUT
 window.logout = function(){
     signOut(auth).then(() => {
         window.location.href = "login.html";
