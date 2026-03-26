@@ -44,8 +44,9 @@ button {
 <button onclick="location.href='leitor.html'">Ler QR Code</button>
 <button onclick="location.href='cadastro.html'">Cadastrar Aluno</button>
 <button onclick="location.href='alunos.html'">Ver Alunos</button>
-<button onclick="location.href='registros.html'">Registros do Dia</button>
+<button onclick="location.href='registros.html'">Resumo do Dia</button>
 <button onclick="location.href='historico.html'">Histórico</button>
+<button onclick="location.href='grafico.html'">Gráfico</button>
 <button onclick="location.href='qrcode.html'">Gerar QR Code</button>
 
 <button onclick="logout()">Sair</button>
@@ -69,14 +70,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// 🔐 PROTEÇÃO DE LOGIN
+// 🔐 proteção de login
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         window.location.href = "login.html";
     }
 });
 
-// 🚪 LOGOUT
+// 🚪 logout
 window.logout = function(){
     signOut(auth).then(() => {
         window.location.href = "login.html";
