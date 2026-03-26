@@ -32,7 +32,7 @@ body {
 .container {
     background: white;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
     max-width: 350px;
     margin: auto;
 }
@@ -61,7 +61,7 @@ button {
 
 <body>
 
-<!-- TOPO CORRETO -->
+<!-- TOPO -->
 <div class="topo">
     <div id="escola">Carregando...</div>
     <button id="sair" onclick="logout()">Sair</button>
@@ -71,6 +71,7 @@ button {
 
 <div class="container">
 
+<button onclick="location.href='dashboard.html'">Dashboard</button>
 <button onclick="location.href='leitor.html'">Ler QR Code</button>
 <button onclick="location.href='cadastro.html'">Cadastrar Aluno</button>
 <button onclick="location.href='alunos.html'">Ver Alunos</button>
@@ -98,7 +99,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// PROTEÇÃO + NOME ESCOLA
+// PROTEÇÃO + NOME DA ESCOLA
 onAuthStateChanged(auth, (user) => {
 
     if (!user) {
@@ -106,7 +107,6 @@ onAuthStateChanged(auth, (user) => {
         return;
     }
 
-    // ✅ AGORA APARECE NO MENU (CORRETO)
     document.getElementById("escola").innerText = user.email;
 
 });
