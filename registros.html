@@ -68,11 +68,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// ✅ DATA CORRIGIDA (BRASIL)
 function hoje(){
     const d = new Date();
-    return d.toISOString().split("T")[0];
+    return d.toLocaleDateString("sv-SE");
 }
 
+// mostra data na tela
 document.getElementById("data").innerText = "Data: " + hoje();
 
 onAuthStateChanged(auth, (user) => {
