@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Relatório do Dia</title>
+<title>Relatório</title>
 
 <style>
 body{
@@ -11,6 +11,13 @@ body{
     color: white;
     text-align: center;
     padding: 20px;
+}
+
+.topo{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .container{
@@ -27,33 +34,42 @@ body{
     border-bottom: 1px solid #ccc;
 }
 
-h3{
-    margin-top: 20px;
+button{
+    margin-top: 10px;
+    padding: 10px;
 }
 
-button{
-    margin-top: 15px;
-    padding: 10px;
+input{
+    padding: 8px;
+    margin-top: 10px;
+    width: 100%;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Relatório do Dia</h2>
-<h3 id="data"></h3>
+<div class="topo">
+    <div id="escola">Escola</div>
+    <button onclick="sair()">Sair</button>
+</div>
+
+<h2>Relatório</h2>
+
+<input type="date" id="filtroData">
 
 <div class="container" id="lista">Carregando...</div>
 
 <h3 id="total"></h3>
 
+<button onclick="exportar()">Exportar Relatório</button>
 <button onclick="voltar()">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -68,14 +84,16 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ✅ DATA CORRIGIDA (BRASIL)
+let registrosCache = [];
+let uidAtual = null;
+
+// DATA BRASIL
 function hoje(){
-    const d = new Date();
-    return d.toLocaleDateString("sv-SE");
+    return new Date().toLocaleDateString("sv-SE");
 }
 
-// mostra data na tela
-document.getElementById("data").innerText = "Data: " + hoje();
+// já inicia com hoje selecionado
+document.getElementById("filtroData").value = hoje();
 
 onAuthStateChanged(auth, (user) => {
 
@@ -84,44 +102,92 @@ onAuthStateChanged(auth, (user) => {
         return;
     }
 
-    const uid = user.uid;
-    const lista = document.getElementById("lista");
-    const total = document.getElementById("total");
+    uidAtual = user.uid;
 
-    onSnapshot(collection(db, "escolas", uid, "registros"), (snapshot) => {
+    // Nome da escola (email)
+    document.getElementById("escola").innerText = user.email;
 
-        lista.innerHTML = "";
-        let contador = 0;
+    onSnapshot(collection(db, "escolas", uidAtual, "registros"), (snapshot) => {
+
+        registrosCache = [];
 
         snapshot.forEach((doc) => {
-
-            const dado = doc.data();
-
-            if(dado.data === hoje()){
-
-                contador++;
-
-                lista.innerHTML += `
-                    <div class="item">
-                        <strong>${dado.nome}</strong><br>
-                        Código: ${dado.codigo}<br>
-                        Hora: ${dado.hora}
-                    </div>
-                `;
-            }
-
+            registrosCache.push(doc.data());
         });
 
-        if(contador === 0){
-            lista.innerHTML = "Nenhum registro hoje";
-        }
-
-        total.innerText = "Total de alunos: " + contador;
+        renderizar();
 
     });
 
 });
 
+// RENDERIZA LISTA
+function renderizar(){
+
+    const dataFiltro = document.getElementById("filtroData").value;
+    const lista = document.getElementById("lista");
+    const total = document.getElementById("total");
+
+    lista.innerHTML = "";
+
+    let contador = 0;
+
+    registrosCache.forEach((r) => {
+
+        if(r.data === dataFiltro){
+
+            contador++;
+
+            lista.innerHTML += `
+                <div class="item">
+                    <strong>${r.nome}</strong><br>
+                    Código: ${r.codigo}<br>
+                    Hora: ${r.hora}
+                </div>
+            `;
+        }
+
+    });
+
+    if(contador === 0){
+        lista.innerHTML = "Nenhum registro nessa data";
+    }
+
+    total.innerText = "Total de alunos: " + contador;
+}
+
+// muda data automaticamente
+document.getElementById("filtroData").addEventListener("change", renderizar);
+
+// EXPORTAR
+window.exportar = function(){
+
+    const dataFiltro = document.getElementById("filtroData").value;
+
+    let texto = "Relatório - " + dataFiltro + "\n\n";
+
+    registrosCache.forEach((r) => {
+        if(r.data === dataFiltro){
+            texto += r.nome + " - Código: " + r.codigo + " - Hora: " + r.hora + "\n";
+        }
+    });
+
+    const blob = new Blob([texto], { type: "text/plain" });
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+    link.download = "relatorio.txt";
+    link.click();
+}
+
+// SAIR
+window.sair = function(){
+    signOut(auth).then(() => {
+        window.location.href = "login.html";
+    });
+}
+
+// VOLTAR
 window.voltar = function(){
     window.location.href = "index.html";
 }
