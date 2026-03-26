@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Relatório</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{
     font-family: Arial;
@@ -11,13 +13,6 @@ body{
     color: white;
     text-align: center;
     padding: 20px;
-}
-
-.topo{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
 }
 
 .container{
@@ -37,6 +32,7 @@ body{
 button{
     margin-top: 10px;
     padding: 10px;
+    width: 100%;
 }
 
 input{
@@ -49,11 +45,6 @@ input{
 
 <body>
 
-<div class="topo">
-    <div id="escola">Escola</div>
-    <button onclick="sair()">Sair</button>
-</div>
-
 <h2>Relatório</h2>
 
 <input type="date" id="filtroData">
@@ -62,14 +53,14 @@ input{
 
 <h3 id="total"></h3>
 
-<button onclick="exportar()">Exportar Relatório</button>
+<button onclick="gerarPDF()">Exportar PDF</button>
 <button onclick="voltar()">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -85,16 +76,16 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let registrosCache = [];
-let uidAtual = null;
 
 // DATA BRASIL
 function hoje(){
     return new Date().toLocaleDateString("sv-SE");
 }
 
-// já inicia com hoje selecionado
+// DATA INICIAL
 document.getElementById("filtroData").value = hoje();
 
+// LOGIN
 onAuthStateChanged(auth, (user) => {
 
     if (!user) {
@@ -102,12 +93,7 @@ onAuthStateChanged(auth, (user) => {
         return;
     }
 
-    uidAtual = user.uid;
-
-    // Nome da escola (email)
-    document.getElementById("escola").innerText = user.email;
-
-    onSnapshot(collection(db, "escolas", uidAtual, "registros"), (snapshot) => {
+    onSnapshot(collection(db, "escolas", user.uid, "registros"), (snapshot) => {
 
         registrosCache = [];
 
@@ -121,7 +107,7 @@ onAuthStateChanged(auth, (user) => {
 
 });
 
-// RENDERIZA LISTA
+// RENDERIZA
 function renderizar(){
 
     const dataFiltro = document.getElementById("filtroData").value;
@@ -129,7 +115,6 @@ function renderizar(){
     const total = document.getElementById("total");
 
     lista.innerHTML = "";
-
     let contador = 0;
 
     registrosCache.forEach((r) => {
@@ -156,35 +141,43 @@ function renderizar(){
     total.innerText = "Total de alunos: " + contador;
 }
 
-// muda data automaticamente
+// FILTRO
 document.getElementById("filtroData").addEventListener("change", renderizar);
 
-// EXPORTAR
-window.exportar = function(){
+// PDF
+window.gerarPDF = function(){
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
     const dataFiltro = document.getElementById("filtroData").value;
+    let y = 20;
 
-    let texto = "Relatório - " + dataFiltro + "\n\n";
+    doc.setFontSize(16);
+    doc.text("Relatório de Merenda", 20, y);
+
+    y += 10;
+    doc.setFontSize(12);
+    doc.text("Data: " + dataFiltro, 20, y);
+
+    y += 10;
 
     registrosCache.forEach((r) => {
+
         if(r.data === dataFiltro){
-            texto += r.nome + " - Código: " + r.codigo + " - Hora: " + r.hora + "\n";
+
+            doc.text(
+                r.nome + " | Código: " + r.codigo + " | " + r.hora,
+                20,
+                y
+            );
+
+            y += 8;
         }
+
     });
 
-    const blob = new Blob([texto], { type: "text/plain" });
-    const link = document.createElement("a");
-
-    link.href = URL.createObjectURL(blob);
-    link.download = "relatorio.txt";
-    link.click();
-}
-
-// SAIR
-window.sair = function(){
-    signOut(auth).then(() => {
-        window.location.href = "login.html";
-    });
+    doc.save("relatorio.pdf");
 }
 
 // VOLTAR
