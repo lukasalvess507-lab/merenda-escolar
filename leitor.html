@@ -4,12 +4,19 @@
 <meta charset="UTF-8">
 <title>Leitor QR</title>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <style>
 body{
     font-family: Arial;
     background:#2f3a73;
     color:white;
     text-align:center;
+}
+
+#reader{
+    width:300px;
+    margin:auto;
 }
 
 #mensagem{
@@ -20,13 +27,11 @@ body{
 
 .erro{
     background:red;
-    color:white;
     padding:10px;
 }
 
 .sucesso{
     background:green;
-    color:white;
     padding:10px;
 }
 </style>
@@ -36,7 +41,7 @@ body{
 
 <h2>Leitor QR Code</h2>
 
-<video id="preview" width="300"></video>
+<div id="reader"></div>
 
 <div id="mensagem">Aguardando leitura...</div>
 
@@ -63,7 +68,20 @@ const auth = getAuth(app);
 
 const hoje = new Date().toISOString().split("T")[0];
 
-window.processarLeitura = async function(codigo){
+const msg = document.getElementById("mensagem");
+
+function mostrarMensagem(texto, tipo){
+
+    msg.innerText = texto;
+    msg.className = tipo;
+
+    setTimeout(()=>{
+        msg.innerText = "Aguardando leitura...";
+        msg.className = "";
+    },2000);
+}
+
+async function processarLeitura(codigo){
 
     const user = auth.currentUser;
 
@@ -72,16 +90,7 @@ window.processarLeitura = async function(codigo){
     const jaExiste = await getDoc(ref);
 
     if(jaExiste.exists()){
-
-        const msg = document.getElementById("mensagem");
-        msg.innerText = "ALUNO JÁ REGISTRADO HOJE";
-        msg.className = "erro";
-
-        setTimeout(()=>{
-            msg.innerText = "Aguardando leitura...";
-            msg.className = "";
-        },2000);
-
+        mostrarMensagem("ALUNO JÁ REGISTRADO HOJE", "erro");
         return;
     }
 
@@ -91,15 +100,27 @@ window.processarLeitura = async function(codigo){
         hora: new Date().toLocaleTimeString()
     });
 
-    const msg = document.getElementById("mensagem");
-    msg.innerText = "REGISTRADO COM SUCESSO";
-    msg.className = "sucesso";
+    mostrarMensagem("REGISTRADO COM SUCESSO", "sucesso");
+}
 
-    setTimeout(()=>{
-        msg.innerText = "Aguardando leitura...";
-        msg.className = "";
-    },2000);
-};
+const html5QrCode = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+        const cameraId = devices[0].id;
+
+        html5QrCode.start(
+            cameraId,
+            {
+                fps: 10,
+                qrbox: 250
+            },
+            (decodedText) => {
+                processarLeitura(decodedText);
+            }
+        );
+    }
+});
 
 window.voltar = function(){
     window.location.href = "index.html";
