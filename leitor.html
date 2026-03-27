@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Leitor QR</title>
+<title>Leitor QR Code</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -67,30 +67,47 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 const hoje = new Date().toISOString().split("T")[0];
-
 const msg = document.getElementById("mensagem");
 
-function mostrarMensagem(texto, tipo){
+let bloqueado = false;
 
+// 🔊 SOM (BIP)
+function bip(){
+    const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    audio.play();
+}
+
+// MENSAGEM
+function mostrar(texto, tipo){
     msg.innerText = texto;
     msg.className = tipo;
 
     setTimeout(()=>{
         msg.innerText = "Aguardando leitura...";
         msg.className = "";
+        bloqueado = false;
     },2000);
 }
 
-async function processarLeitura(codigo){
+// PROCESSAR QR
+async function processar(codigo){
+
+    if(bloqueado) return;
+    bloqueado = true;
 
     const user = auth.currentUser;
+    if(!user){
+        mostrar("Erro de login", "erro");
+        return;
+    }
 
     const ref = doc(db, "escolas", user.uid, "registros", hoje + "_" + codigo);
 
     const jaExiste = await getDoc(ref);
 
     if(jaExiste.exists()){
-        mostrarMensagem("ALUNO JÁ REGISTRADO HOJE", "erro");
+        bip();
+        mostrar("ALUNO JÁ REGISTRADO HOJE", "erro");
         return;
     }
 
@@ -100,14 +117,20 @@ async function processarLeitura(codigo){
         hora: new Date().toLocaleTimeString()
     });
 
-    mostrarMensagem("REGISTRADO COM SUCESSO", "sucesso");
+    bip();
+    mostrar("REGISTRADO COM SUCESSO", "sucesso");
 }
 
+// INICIAR CÂMERA (TRASEIRA)
 const html5QrCode = new Html5Qrcode("reader");
 
 Html5Qrcode.getCameras().then(devices => {
+
     if (devices && devices.length) {
-        const cameraId = devices[0].id;
+
+        let traseira = devices.find(d => d.label.toLowerCase().includes("back"));
+
+        let cameraId = traseira ? traseira.id : devices[devices.length - 1].id;
 
         html5QrCode.start(
             cameraId,
@@ -116,12 +139,13 @@ Html5Qrcode.getCameras().then(devices => {
                 qrbox: 250
             },
             (decodedText) => {
-                processarLeitura(decodedText);
+                processar(decodedText);
             }
         );
     }
 });
 
+// VOLTAR
 window.voltar = function(){
     window.location.href = "index.html";
 }
