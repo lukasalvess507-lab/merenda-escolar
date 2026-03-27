@@ -4,37 +4,41 @@
 <meta charset="UTF-8">
 <title>Leitor QR</title>
 
-<script src="https://unpkg.com/html5-qrcode"></script>
-
 <style>
 body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 20px;
+    background:#2f3a73;
+    color:white;
+    text-align:center;
 }
 
-#reader{
-    width: 300px;
-    margin: auto;
+#mensagem{
+    margin-top:20px;
+    font-size:22px;
+    font-weight:bold;
 }
 
-#status{
-    margin-top: 20px;
-    font-size: 18px;
+.erro{
+    background:red;
+    color:white;
+    padding:10px;
+}
+
+.sucesso{
+    background:green;
+    color:white;
+    padding:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Leitor de QR Code</h2>
+<h2>Leitor QR Code</h2>
 
-<div id="reader"></div>
-<p id="status">Aguardando leitura...</p>
+<video id="preview" width="300"></video>
 
-<audio id="beep" src="https://www.soundjay.com/buttons/sounds/beep-01a.mp3"></audio>
+<div id="mensagem">Aguardando leitura...</div>
 
 <button onclick="voltar()">Voltar</button>
 
@@ -42,7 +46,7 @@ body{
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -57,83 +61,45 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let usuario = null;
-let lendo = false;
+const hoje = new Date().toISOString().split("T")[0];
 
-// ✅ DATA CORRIGIDA
-function hoje(){
-    const d = new Date();
-    return d.toLocaleDateString("sv-SE");
-}
+window.processarLeitura = async function(codigo){
 
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-    } else {
-        usuario = user;
-        iniciarCamera();
+    const user = auth.currentUser;
+
+    const ref = doc(db, "escolas", user.uid, "registros", hoje + "_" + codigo);
+
+    const jaExiste = await getDoc(ref);
+
+    if(jaExiste.exists()){
+
+        const msg = document.getElementById("mensagem");
+        msg.innerText = "ALUNO JÁ REGISTRADO HOJE";
+        msg.className = "erro";
+
+        setTimeout(()=>{
+            msg.innerText = "Aguardando leitura...";
+            msg.className = "";
+        },2000);
+
+        return;
     }
-});
 
-function iniciarCamera(){
-
-    const html5QrCode = new Html5Qrcode("reader");
-
-    Html5Qrcode.getCameras().then(devices => {
-        const cameraId = devices[devices.length - 1].id;
-
-        html5QrCode.start(
-            cameraId,
-            { fps: 10, qrbox: 250 },
-            async (codigo) => {
-
-                if(lendo) return;
-                lendo = true;
-
-                document.getElementById("status").innerText = "Lendo...";
-
-                const alunoRef = doc(db, "escolas", usuario.uid, "alunos", codigo);
-                const alunoSnap = await getDoc(alunoRef);
-
-                if(!alunoSnap.exists()){
-                    document.getElementById("status").innerText = "Aluno não encontrado";
-                    lendo = false;
-                    return;
-                }
-
-                const aluno = alunoSnap.data();
-
-                const registroRef = doc(db, "escolas", usuario.uid, "registros", hoje()+"_"+codigo);
-                const registroSnap = await getDoc(registroRef);
-
-                if(registroSnap.exists()){
-                    document.getElementById("status").innerText = "Já registrado hoje: " + aluno.nome;
-                    lendo = false;
-                    return;
-                }
-
-                await setDoc(registroRef, {
-                    codigo: codigo,
-                    nome: aluno.nome,
-                    data: hoje(),
-                    hora: new Date().toLocaleTimeString()
-                });
-
-                document.getElementById("beep").play();
-
-                document.getElementById("status").innerText = "Registrado: " + aluno.nome;
-
-                setTimeout(() => {
-                    lendo = false;
-                    document.getElementById("status").innerText = "Aguardando leitura...";
-                }, 2000);
-
-            },
-            (erro) => {}
-        );
+    await setDoc(ref,{
+        codigo: codigo,
+        data: hoje,
+        hora: new Date().toLocaleTimeString()
     });
 
-}
+    const msg = document.getElementById("mensagem");
+    msg.innerText = "REGISTRADO COM SUCESSO";
+    msg.className = "sucesso";
+
+    setTimeout(()=>{
+        msg.innerText = "Aguardando leitura...";
+        msg.className = "";
+    },2000);
+};
 
 window.voltar = function(){
     window.location.href = "index.html";
