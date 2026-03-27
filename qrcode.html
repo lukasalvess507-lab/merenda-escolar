@@ -4,28 +4,45 @@
 <meta charset="UTF-8">
 <title>Gerar QR Code</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 20px;
+    background:#2f3a73;
+    color:white;
+    text-align:center;
+    padding:20px;
 }
 
 .container{
-    background: white;
-    color: black;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 400px;
-    margin: auto;
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:10px;
+    max-width:350px;
+    margin:auto;
 }
 
-canvas{
-    margin-top: 20px;
+input{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+}
+
+#qrcode{
+    margin-top:20px;
+}
+
+/* BOTÃO ESCONDIDO */
+#baixarBtn{
+    display:none;
 }
 </style>
 </head>
@@ -36,34 +53,61 @@ canvas{
 
 <div class="container">
 
-<input type="text" id="codigo" placeholder="Digite o código do aluno (ex: 001)">
-<br><br>
+<input type="text" id="codigo" placeholder="Digite o código do aluno">
 
 <button onclick="gerar()">Gerar QR Code</button>
 
-<br><br>
-<canvas id="qrcode"></canvas>
+<div id="qrcode"></div>
+
+<button id="baixarBtn" onclick="baixar()">Baixar QR Code</button>
+
+<button onclick="voltar()">Voltar</button>
 
 </div>
 
 <script>
 
 function gerar(){
+
     const codigo = document.getElementById("codigo").value;
 
     if(!codigo){
-        alert("Digite o código");
+        alert("Digite um código");
         return;
     }
 
-    const canvas = document.getElementById("qrcode");
+    document.getElementById("qrcode").innerHTML = "";
 
-    QRCode.toCanvas(canvas, codigo, function (error) {
-        if (error) console.error(error);
+    new QRCode(document.getElementById("qrcode"), {
+        text: codigo,
+        width: 200,
+        height: 200
     });
+
+    // MOSTRA BOTÃO BAIXAR
+    document.getElementById("baixarBtn").style.display = "block";
+}
+
+function baixar(){
+
+    const img = document.querySelector("#qrcode img");
+
+    if(!img){
+        alert("Erro ao gerar QR Code");
+        return;
+    }
+
+    const link = document.createElement("a");
+    link.href = img.src;
+    link.download = "qrcode.png";
+    link.click();
+}
+
+function voltar(){
+    window.location.href = "index.html";
 }
 
 </script>
-<button onclick="window.location.href='index.html'">Voltar</button>
+
 </body>
 </html>
