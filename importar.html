@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Importar Alunos</title>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background: #2f3a73;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+.container{
+    background: white;
+    color: black;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin: auto;
+}
+
+button{
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Importar Alunos</h2>
+
+<div class="container">
+
+<input type="file" id="arquivo" accept=".xlsx, .csv">
+
+<button onclick="importar()">Importar</button>
+
+<p id="status"></p>
+
+<button onclick="voltar()">Voltar</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+let usuario = null;
+
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+    } else {
+        usuario = user;
+    }
+});
+
+window.importar = function(){
+
+    const arquivo = document.getElementById("arquivo").files[0];
+
+    if(!arquivo){
+        alert("Selecione um arquivo");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e){
+
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet);
+
+        let total = 0;
+
+        for (let aluno of json){
+
+            if(!aluno.codigo || !aluno.nome) continue;
+
+            await setDoc(
+                doc(db, "escolas", usuario.uid, "alunos", String(aluno.codigo)),
+                {
+                    nome: aluno.nome,
+                    turma: aluno.turma || ""
+                }
+            );
+
+            total++;
+        }
+
+        document.getElementById("status").innerText =
+            total + " alunos importados com sucesso";
+
+    };
+
+    reader.readAsArrayBuffer(arquivo);
+};
+
+window.voltar = function(){
+    window.location.href = "index.html";
+};
+
+</script>
+
+</body>
+</html>
