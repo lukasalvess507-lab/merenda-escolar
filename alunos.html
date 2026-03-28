@@ -16,48 +16,32 @@ body{
 .container{
     background:white;
     padding:20px;
-    border-radius:10px;
+    border-radius:12px;
     max-width:400px;
-    margin:50px auto;
+    margin:40px auto;
 }
 
-.aluno{
-    background:#e9e9e9;
-    margin:10px;
+.card{
+    background:#eee;
     padding:10px;
+    margin:10px 0;
     border-radius:8px;
-    text-align:left;
-}
-
-.botoes{
-    margin-top:10px;
-}
-
-.botoes button{
-    width:48%;
-    margin:2px;
-    padding:8px;
-    border:none;
-    border-radius:6px;
-    color:white;
-}
-
-.editar{
-    background:#2d6cdf;
-}
-
-.excluir{
-    background:#c0392b;
 }
 
 button{
-    width:95%;
+    width:100%;
     padding:12px;
     margin-top:10px;
     background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
+}
+
+select{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
 }
 </style>
 </head>
@@ -68,6 +52,10 @@ button{
 
 <h3>Lista de Alunos</h3>
 
+<select id="filtroTurma" onchange="filtrar()">
+    <option value="todas">Todas as turmas</option>
+</select>
+
 <div id="lista"></div>
 
 <button onclick="voltar()">Voltar</button>
@@ -77,7 +65,7 @@ button{
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -91,73 +79,69 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const escolaId = "escola_antonio_barros";
+const escolaId = localStorage.getItem("escolaId");
 
-async function carregarAlunos(){
+let todosAlunos = [];
 
-    const lista = document.getElementById("lista");
-    lista.innerHTML = "Carregando...";
+async function carregar(){
 
-    const querySnapshot = await getDocs(
-        collection(db, "escolas", escolaId, "alunos")
-    );
+    const snapshot = await getDocs(collection(db, "escolas", escolaId, "alunos"));
 
-    lista.innerHTML = "";
+    const turmasSet = new Set();
 
-    querySnapshot.forEach((docSnap) => {
+    todosAlunos = [];
 
-        const aluno = docSnap.data();
-        const id = docSnap.id;
+    snapshot.forEach(doc => {
+        const aluno = doc.data();
+        todosAlunos.push(aluno);
+        turmasSet.add(aluno.turma);
+    });
 
-        lista.innerHTML += `
-            <div class="aluno">
-                <b>Código:</b> ${aluno.codigo} <br>
-                <b>Nome:</b> ${aluno.nome} <br>
-                <b>Turma:</b> ${aluno.turma}
+    const select = document.getElementById("filtroTurma");
 
-                <div class="botoes">
-                    <button class="editar" onclick="editarAluno('${id}', '${aluno.codigo}', '${aluno.nome}', '${aluno.turma}')">Editar</button>
-                    <button class="excluir" onclick="excluirAluno('${id}')">Excluir</button>
-                </div>
-            </div>
+    turmasSet.forEach(turma => {
+        const option = document.createElement("option");
+        option.value = turma;
+        option.textContent = turma;
+        select.appendChild(option);
+    });
+
+    mostrar(todosAlunos);
+}
+
+function mostrar(lista){
+
+    const div = document.getElementById("lista");
+    div.innerHTML = "";
+
+    lista.forEach(aluno => {
+        div.innerHTML += `
+        <div class="card">
+            <b>Código:</b> ${aluno.codigo}<br>
+            <b>Nome:</b> ${aluno.nome}<br>
+            <b>Turma:</b> ${aluno.turma}
+        </div>
         `;
     });
+}
 
-    if(querySnapshot.empty){
-        lista.innerHTML = "Nenhum aluno encontrado";
+window.filtrar = function(){
+
+    const turma = document.getElementById("filtroTurma").value;
+
+    if(turma === "todas"){
+        mostrar(todosAlunos);
+    } else {
+        const filtrados = todosAlunos.filter(a => a.turma === turma);
+        mostrar(filtrados);
     }
 }
-
-window.excluirAluno = async function(id){
-
-    if(confirm("Deseja excluir este aluno?")){
-
-        await deleteDoc(doc(db, "escolas", escolaId, "alunos", id));
-        carregarAlunos();
-    }
-}
-
-window.editarAluno = async function(id, codigo, nome, turma){
-
-    const novoNome = prompt("Editar nome:", nome);
-    if(novoNome === null) return;
-
-    const novaTurma = prompt("Editar turma:", turma);
-    if(novaTurma === null) return;
-
-    await updateDoc(doc(db, "escolas", escolaId, "alunos", id), {
-        nome: novoNome,
-        turma: novaTurma
-    });
-
-    carregarAlunos();
-}
-
-carregarAlunos();
 
 window.voltar = function(){
     window.location.href = "index.html";
 }
+
+carregar();
 
 </script>
 
