@@ -63,10 +63,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function hojeBrasil(){
-    return new Date().toLocaleDateString('pt-BR', {
-        timeZone: 'America/Sao_Paulo'
-    });
+// 🔥 FUNÇÃO QUE CORRIGE QUALQUER DATA
+function formatarData(data){
+    if(!data) return "Inválido";
+
+    // se já está no formato BR
+    if(data.includes("/")) return data;
+
+    // se está formato americano
+    if(data.includes("-")){
+        const partes = data.split("-");
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    return data;
 }
 
 const ctx = document.getElementById('grafico');
@@ -77,7 +87,8 @@ const chart = new Chart(ctx, {
         labels: [],
         datasets: [{
             label: 'Alunos por dia',
-            data: []
+            data: [],
+            borderRadius: 8
         }]
     }
 });
@@ -88,17 +99,23 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
     snapshot.forEach(doc => {
         const d = doc.data();
-        const data = d.data;
 
-        if(!contagem[data]){
-            contagem[data] = 0;
+        const dataCorrigida = formatarData(d.data);
+
+        if(!contagem[dataCorrigida]){
+            contagem[dataCorrigida] = 0;
         }
 
-        contagem[data]++;
+        contagem[dataCorrigida]++;
     });
 
-    const datas = Object.keys(contagem).sort();
-    const valores = Object.values(contagem);
+    const datas = Object.keys(contagem).sort((a,b)=>{
+        const [d1,m1,y1] = a.split("/");
+        const [d2,m2,y2] = b.split("/");
+        return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
+    });
+
+    const valores = datas.map(d => contagem[d]);
 
     chart.data.labels = datas;
     chart.data.datasets[0].data = valores;
