@@ -4,68 +4,6 @@
 <meta charset="UTF-8">
 <title>Resumo do Dia</title>
 
-<style>
-body {
-  font-family: Arial;
-  background: #2f4f6f;
-  margin: 0;
-  padding: 0;
-  color: white;
-  text-align: center;
-}
-
-.container {
-  background: white;
-  color: black;
-  width: 90%;
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 20px;
-  border-radius: 10px;
-}
-
-select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-}
-
-.item {
-  border-bottom: 1px solid #ccc;
-  padding: 10px 0;
-}
-
-button {
-  margin-top: 20px;
-  padding: 10px;
-  width: 100%;
-  background: green;
-  color: white;
-  border: none;
-  border-radius: 5px;
-}
-</style>
-</head>
-
-<body>
-
-<h2>S.C.A.E</h2>
-<p>Resumo do Dia</p>
-
-<div class="container">
-
-<select id="filtroTurma">
-  <option value="todas">Todas as turmas</option>
-</select>
-
-<h3 id="total"></h3>
-
-<div id="lista"></div>
-
-<button onclick="history.back()">Voltar</button>
-
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
@@ -84,12 +22,12 @@ const db = getFirestore(app);
 
 const escolaId = "escola_antonio_barros";
 
+let registros = [];
+let alunosMap = {};
+
 const lista = document.getElementById("lista");
 const total = document.getElementById("total");
 const filtro = document.getElementById("filtroTurma");
-
-let registros = [];
-let alunosMap = {};
 
 onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
   alunosMap = {};
@@ -101,27 +39,24 @@ onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
 
 onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
   registros = [];
-  const hoje = new Date().toLocaleDateString("pt-BR");
 
   snapshot.forEach(doc => {
     const d = doc.data();
 
-if (d.data)
     registros.push({
-  nome: d.nome,
-  codigo: String(d.codigo),
-  turma: alunosMap[String(d.codigo)] || "Sem turma",
-  data: d.data,
-  hora: d.hora || ""
-});
-    }
+      nome: d.nome || "",
+      codigo: String(d.codigo || ""),
+      turma: alunosMap[String(d.codigo)] || "Sem turma",
+      data: d.data || "",
+      hora: d.hora || ""
+    });
   });
 
   montarFiltro();
   renderizar();
 });
 
-function montarFiltro() {
+function montarFiltro(){
   const turmas = new Set();
 
   registros.forEach(r => turmas.add(r.turma));
@@ -133,22 +68,24 @@ function montarFiltro() {
   });
 }
 
-function renderizar() {
+function renderizar(){
   lista.innerHTML = "";
   const turmaSelecionada = filtro.value;
   let contador = 0;
 
   registros.forEach(r => {
+
     if (turmaSelecionada !== "todas" && r.turma !== turmaSelecionada) return;
 
     contador++;
 
     const div = document.createElement("div");
     div.className = "item";
+
     div.innerHTML =
-  r.nome +
-  "<br><small>" + r.turma + "</small>" +
-  "<br><small>" + r.data + " " + (r.hora || "") + "</small>";
+      r.nome +
+      "<br><small>" + r.turma + "</small>" +
+      "<br><small>" + r.data + " " + (r.hora || "") + "</small>";
 
     lista.appendChild(div);
   });
@@ -156,8 +93,59 @@ function renderizar() {
   total.innerText = "Total: " + contador + " alunos";
 }
 
-filtro.addEventListener("change", renderizar);
+window.addEventListener("load", () => {
+  filtro.addEventListener("change", renderizar);
+});
 </script>
+
+<style>
+body{
+  font-family: Arial;
+  background:#2f4a6d;
+  text-align:center;
+  color:white;
+}
+.box{
+  background:white;
+  color:black;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+  margin:50px auto;
+}
+.item{
+  border-bottom:1px solid #ccc;
+  padding:10px;
+}
+select{
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+}
+button{
+  width:100%;
+  padding:10px;
+  background:green;
+  color:white;
+  border:none;
+  border-radius:5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>S.C.A.E</h1>
+<p>Resumo do Dia</p>
+
+<div class="box">
+  <select id="filtroTurma"></select>
+  <h3 id="total"></h3>
+  <div id="lista"></div>
+  <br>
+  <button onclick="history.back()">Voltar</button>
+</div>
 
 </body>
 </html>
