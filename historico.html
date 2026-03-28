@@ -1,16 +1,104 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Histórico</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f5132, #198754);
+  color: white;
+}
+
+.container {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.card {
+  background: white;
+  color: #333;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 400px;
+  margin: auto;
+}
+
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+
+button {
+  background: #198754;
+  color: white;
+  font-size: 15px;
+}
+
+.linha {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+  text-align: left;
+}
+
+.topo-pdf {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.topo-pdf h2 {
+  margin: 5px 0;
+}
+
+.topo-pdf p {
+  margin: 0;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>S.C.A.E</h1>
+  <h3>Histórico Geral</h3>
+
+  <div class="card" id="areaPDF">
+
+    <div class="topo-pdf">
+      <h2>Relatório de Merenda</h2>
+      <p id="dataRelatorio"></p>
+    </div>
+
+    <input type="date" id="filtroData" onchange="filtrarPorData()">
+
+    <button onclick="mostrarTodos()">Mostrar todos</button>
+
+    <h3 id="total"></h3>
+
+    <div id="lista"></div>
+
+    <button onclick="gerarPDF()">Exportar PDF</button>
+    <button onclick="voltar()">Voltar</button>
+
+  </div>
+</div>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
-  authDomain: "merenda-escolar-2.firebaseapp.com",
+  apiKey: "SUA_KEY",
+  authDomain: "SEU_DOMINIO",
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
@@ -23,19 +111,6 @@ const db = getFirestore(app);
 const escolaId = "escola_antonio_barros";
 
 let registros = [];
-let alunosMap = {};
-
-const lista = document.getElementById("lista");
-const total = document.getElementById("total");
-const inputData = document.getElementById("data");
-
-onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
-  alunosMap = {};
-  snap.forEach(doc => {
-    const d = doc.data();
-    alunosMap[String(d.codigo)] = d.turma || "Sem turma";
-  });
-});
 
 onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
   registros = [];
@@ -44,127 +119,74 @@ onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
     const d = doc.data();
 
     registros.push({
-      nome: d.nome || "",
-      codigo: String(d.codigo || ""),
-      turma: alunosMap[String(d.codigo)] || "Sem turma",
-      data: d.data || "",
+      nome: d.nome,
+      turma: d.turma || "Sem turma",
+      data: d.data,
       hora: d.hora || ""
     });
   });
 
-  renderizar();
+  atualizarDataRelatorio();
+  renderizarLista(registros);
 });
 
-function renderizar(){
-  lista.innerHTML = "";
-  let contador = 0;
+function atualizarDataRelatorio() {
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  document.getElementById("dataRelatorio").innerText = "Gerado em: " + hoje;
+}
 
-  const dataSelecionada = inputData.value;
+function renderizarLista(lista) {
+  const div = document.getElementById("lista");
+  const total = document.getElementById("total");
 
-  let dataFormatada = null;
+  div.innerHTML = "";
+  total.innerText = "Total: " + lista.length + " alunos";
 
-  if (dataSelecionada) {
-    const partes = dataSelecionada.split("-");
-    dataFormatada = partes[2] + "/" + partes[1] + "/" + partes[0];
-  }
-
-  registros.forEach(r => {
-
-    if (dataFormatada && String(r.data) !== String(dataFormatada)) return;
-
-    contador++;
-
-    const div = document.createElement("div");
-    div.className = "item";
-
-    div.innerHTML =
-      r.nome +
-      "<br><small>" + r.turma + "</small>" +
-      "<br><small>" + r.data + " " + (r.hora || "") + "</small>";
-
-    lista.appendChild(div);
+  lista.forEach(r => {
+    div.innerHTML += `
+      <div class="linha">
+        <strong>${r.nome}</strong><br>
+        Turma: ${r.turma}<br>
+        Data: ${r.data} ${r.hora}
+      </div>
+    `;
   });
-
-  total.innerText = "Total: " + contador + " alunos";
 }
 
-inputData.addEventListener("change", renderizar);
-</script>
+function filtrarPorData() {
+  const dataSelecionada = document.getElementById("filtroData").value;
 
-<style>
-body{
-  font-family: Arial;
-  background:#2f4a6d;
-  text-align:center;
-  color:white;
+  if (!dataSelecionada) return;
+
+  const dataFormatada = dataSelecionada.split("-").reverse().join("/");
+
+  const filtrados = registros.filter(r => r.data === dataFormatada);
+
+  renderizarLista(filtrados);
 }
 
-.box{
-  background:white;
-  color:black;
-  padding:20px;
-  border-radius:10px;
-  width:300px;
-  margin:50px auto;
+function mostrarTodos() {
+  renderizarLista(registros);
 }
 
-.item{
-  border-bottom:1px solid #ccc;
-  padding:10px;
+function gerarPDF() {
+  const elemento = document.getElementById("areaPDF");
+
+  const opt = {
+    margin: 0.5,
+    filename: 'relatorio_merenda.pdf',
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(elemento).save();
 }
 
-input{
-  width:100%;
-  padding:8px;
-  margin-bottom:10px;
+function voltar() {
+  window.location.href = "menu.html";
 }
 
-button{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:5px;
-  color:white;
-  margin-top:5px;
-}
-
-.btn-voltar{
-  background:green;
-}
-
-.btn-limpar{
-  background:#555;
-}
-</style>
-
-</head>
-
-<body>
-
-<h1>S.C.A.E</h1>
-<p>Histórico Geral</p>
-
-<div class="box">
-
-  <input type="date" id="data">
-
-  <button class="btn-limpar" onclick="limparFiltro()">Mostrar todos</button>
-
-  <h3 id="total"></h3>
-
-  <div id="lista"></div>
-
-  <br>
-
-  <button class="btn-voltar" onclick="history.back()">Voltar</button>
-
-</div>
-
-<script>
-function limparFiltro(){
-  document.getElementById("data").value = "";
-  location.reload();
-}
 </script>
 
 </body>
