@@ -101,7 +101,7 @@ async function carregarAlunos(){
         alunosMap = {};
         snap.forEach(doc=>{
             const d = doc.data();
-            alunosMap[d.codigo] = d.turma || "Sem turma";
+            alunosMap[String(d.codigo)] = d.turma || "Sem turma";
         });
     });
 
@@ -125,7 +125,7 @@ onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
             registros.push({
                 nome: d.nome,
                 codigo: d.codigo,
-                turma: alunosMap[d.codigo] || "Sem turma"
+                turma: alunosMap[String(d.codigo)] || "Sem turma"
             });
 
         }
