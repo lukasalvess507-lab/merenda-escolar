@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leitor QR - S.C.A.E</title>
+<title>Leitor QR</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -13,48 +13,40 @@ body{
     background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
     text-align:center;
-    padding:20px;
-}
-
-.container{
-    background:white;
-    color:black;
-    padding:20px;
-    border-radius:12px;
-    max-width:350px;
-    margin:auto;
 }
 
 #reader{
-    width:100%;
-}
-
-/* BARRA DE FEEDBACK */
-#barra{
-    width:100%;
-    height:10px;
-    margin-top:10px;
-    border-radius:5px;
-    background: transparent;
-    transition: 0.3s;
+    width:300px;
+    margin:auto;
 }
 
 #msg{
     margin-top:15px;
-    font-size:22px;
-    font-weight:bold;
-    min-height:30px;
+    font-size:18px;
+}
+
+#barra{
+    height:10px;
+    width:100%;
+    margin-top:10px;
+}
+
+.verde{
+    background:green;
+}
+
+.vermelho{
+    background:red;
 }
 
 button{
-    width:100%;
+    margin-top:15px;
     padding:12px;
-    margin-top:10px;
+    width:90%;
     background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
-    font-weight:bold;
 }
 </style>
 </head>
@@ -64,28 +56,23 @@ button{
 <h2>S.C.A.E</h2>
 <p>Leitor de QR Code</p>
 
-<div class="container">
-
 <div id="reader"></div>
 
+<div id="msg">Aguardando leitura...</div>
 <div id="barra"></div>
 
-<p id="msg">Aguardando leitura...</p>
-
 <button onclick="window.location.href='index.html'">Voltar</button>
-
-</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -93,83 +80,113 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const hoje = new Date().toISOString().split("T")[0];
-
-const msg = document.getElementById("msg");
-const barra = document.getElementById("barra");
-
+let ultimoCodigo = "";
 let bloqueado = false;
 
-/* 🔊 BIP MAIS CONFIÁVEL */
-function beep(){
-    try{
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.value = 800;
-        osc.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-    }catch(e){}
+function bip(){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
+    oscillator.connect(ctx.destination);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.1);
 }
 
-/* FEEDBACK VISUAL */
-function feedback(cor, texto){
+function hojeBrasil(){
+    const agora = new Date();
+    agora.setHours(agora.getHours() - 3);
+    return agora.toLocaleDateString('pt-BR');
+}
 
-    barra.style.background = cor;
-    msg.innerText = texto;
+async function onScanSuccess(decodedText){
 
-    setTimeout(() => {
-        barra.style.background = "transparent";
-        msg.innerText = "Aguardando leitura...";
+    if(bloqueado) return;
+
+    bloqueado = true;
+
+    const codigoLido = decodedText.trim();
+
+    // evitar leitura repetida imediata
+    if(codigoLido === ultimoCodigo){
         bloqueado = false;
-    }, 3000);
+        return;
+    }
+
+    ultimoCodigo = codigoLido;
+
+    // 🔎 BUSCAR ALUNO PELO CÓDIGO (CORRETO)
+    const q = query(collection(db, "alunos"), where("codigo", "==", codigoLido));
+    const querySnapshot = await getDocs(q);
+
+    if(querySnapshot.empty){
+        document.getElementById("msg").innerText = "Aluno não encontrado";
+        mostrarBarra("vermelho");
+        setTimeout(liberar,2000);
+        return;
+    }
+
+    let aluno;
+    querySnapshot.forEach(doc => {
+        aluno = doc.data();
+    });
+
+    const hoje = hojeBrasil();
+
+    // verificar se já registrou hoje
+    const q2 = query(
+        collection(db, "registros"),
+        where("codigo", "==", codigoLido),
+        where("data", "==", hoje)
+    );
+
+    const registroHoje = await getDocs(q2);
+
+    if(!registroHoje.empty){
+        document.getElementById("msg").innerText = aluno.nome + " já registrado hoje";
+        mostrarBarra("vermelho");
+        bip();
+        setTimeout(liberar,3000);
+        return;
+    }
+
+    // salvar registro
+    await addDoc(collection(db, "registros"), {
+        nome: aluno.nome,
+        codigo: codigoLido,
+        data: hoje,
+        hora: new Date().toLocaleTimeString()
+    });
+
+    document.getElementById("msg").innerText = aluno.nome + " registrado!";
+    mostrarBarra("verde");
+    bip();
+
+    setTimeout(liberar,3000);
+
+}
+
+function mostrarBarra(cor){
+    const barra = document.getElementById("barra");
+    barra.className = "";
+    barra.classList.add(cor);
+}
+
+function liberar(){
+    document.getElementById("msg").innerText = "Aguardando leitura...";
+    document.getElementById("barra").className = "";
+    bloqueado = false;
 }
 
 const html5QrCode = new Html5Qrcode("reader");
 
 html5QrCode.start(
     { facingMode: "environment" },
-    { fps: 8, qrbox: 250 }, // leitura mais estável
-    async (codigo) => {
-
-        if(bloqueado) return;
-        bloqueado = true;
-
-        msg.innerText = "Lendo...";
-
-        const alunoRef = doc(db, "alunos", codigo);
-        const alunoSnap = await getDoc(alunoRef);
-
-        if (!alunoSnap.exists()) {
-            feedback("orange", "Aluno não encontrado");
-            return;
-        }
-
-        const nome = alunoSnap.data().nome;
-
-        const registroRef = doc(db, "registros", codigo + "_" + hoje);
-        const registroSnap = await getDoc(registroRef);
-
-        if (registroSnap.exists()) {
-            beep();
-            feedback("red", "ALUNO JÁ REGISTRADO");
-            return;
-        }
-
-        const hora = new Date().toLocaleTimeString();
-
-        await setDoc(registroRef, {
-            nome: nome,
-            codigo: codigo,
-            data: hoje,
-            hora: hora
-        });
-
-        beep();
-        feedback("green", nome.toUpperCase());
-
-    }
+    {
+        fps: 10,
+        qrbox: 250
+    },
+    onScanSuccess
 );
 
 </script>
