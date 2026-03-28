@@ -58,6 +58,13 @@ button{
     margin-top:15px;
     background:#1f4d2e;
 }
+
+select{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border-radius:8px;
+}
 </style>
 </head>
 
@@ -67,7 +74,13 @@ button{
 <p>Lista de Alunos</p>
 
 <div class="container">
+
+<select id="filtroTurma">
+    <option value="todas">Todas as turmas</option>
+</select>
+
 <div id="lista"></div>
+
 </div>
 
 <button class="voltar" onclick="window.location.href='index.html'">Voltar</button>
@@ -90,25 +103,68 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const lista = document.getElementById("lista");
+const filtro = document.getElementById("filtroTurma");
+
+let todosAlunos = [];
 
 onSnapshot(collection(db, "alunos"), (snapshot) => {
 
-    lista.innerHTML = "";
+    todosAlunos = [];
+    const turmas = new Set();
 
     snapshot.forEach(docSnap => {
 
         const dados = docSnap.data();
         const id = docSnap.id;
 
+        const turma = dados.turma || "Sem turma";
+
+        todosAlunos.push({
+            id,
+            nome: dados.nome,
+            codigo: dados.codigo,
+            turma: turma
+        });
+
+        turmas.add(turma);
+    });
+
+    // montar filtro
+    filtro.innerHTML = '<option value="todas">Todas as turmas</option>';
+
+    turmas.forEach(t => {
+        filtro.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+
+    renderizar();
+
+});
+
+// filtrar ao mudar
+filtro.addEventListener("change", renderizar);
+
+function renderizar(){
+
+    lista.innerHTML = "";
+
+    const turmaSelecionada = filtro.value;
+
+    todosAlunos.forEach(aluno => {
+
+        if(turmaSelecionada !== "todas" && aluno.turma !== turmaSelecionada){
+            return;
+        }
+
         const div = document.createElement("div");
         div.className = "item";
 
         div.innerHTML = `
-            <div class="nome">${dados.nome}</div>
-            Código: ${dados.codigo}
+            <div class="nome">${aluno.nome}</div>
+            Código: ${aluno.codigo}<br>
+            Turma: ${aluno.turma}
             <div class="botoes">
-                <button class="editar" onclick="editar('${id}', '${dados.nome}', '${dados.codigo}')">Editar</button>
-                <button class="excluir" onclick="excluir('${id}')">Excluir</button>
+                <button class="editar" onclick="editar('${aluno.id}', '${aluno.nome}', '${aluno.codigo}', '${aluno.turma}')">Editar</button>
+                <button class="excluir" onclick="excluir('${aluno.id}')">Excluir</button>
             </div>
         `;
 
@@ -116,7 +172,7 @@ onSnapshot(collection(db, "alunos"), (snapshot) => {
 
     });
 
-});
+}
 
 window.excluir = async function(id){
 
@@ -126,16 +182,18 @@ window.excluir = async function(id){
 
 }
 
-window.editar = async function(id, nomeAtual, codigoAtual){
+window.editar = async function(id, nomeAtual, codigoAtual, turmaAtual){
 
     const novoNome = prompt("Editar nome:", nomeAtual);
     const novoCodigo = prompt("Editar código:", codigoAtual);
+    const novaTurma = prompt("Editar turma:", turmaAtual);
 
-    if(novoNome && novoCodigo){
+    if(novoNome && novoCodigo && novaTurma){
 
         await updateDoc(doc(db, "alunos", id), {
             nome: novoNome,
-            codigo: novoCodigo
+            codigo: novoCodigo,
+            turma: novaTurma
         });
 
     }
