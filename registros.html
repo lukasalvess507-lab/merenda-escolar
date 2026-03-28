@@ -21,7 +21,7 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
-const escolaId = localStorage.getItem("escolaId");
+const escolaId = "escola_antonio_barros";
 
 function carregarAlunos(){
     onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
