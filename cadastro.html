@@ -2,109 +2,85 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cadastrar Aluno</title>
+<title>Cadastrar - S.C.A.E</title>
 
 <style>
 body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 40px 20px;
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
+    color:white;
+    text-align:center;
+    padding:20px;
+    animation: fadeIn 0.8s ease;
 }
 
-.card{
-    background: white;
-    color: #333;
-    padding: 20px;
-    border-radius: 12px;
-    max-width: 400px;
-    margin: auto;
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.container{
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:12px;
+    max-width:350px;
+    margin:auto;
 }
 
 input{
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
 }
 
 button{
-    width: 100%;
-    padding: 12px;
-    background: #2f3a73;
-    color: white;
-    border: none;
-    border-radius: 8px;
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    background:#1f4d2e;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:active{
+    transform:scale(0.96);
+}
+
+#msg{
+    margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Cadastrar Aluno</h2>
+<h2>S.C.A.E</h2>
+<p>Cadastrar Aluno</p>
 
-<div class="card">
+<div class="container">
 
-<input type="text" id="codigo" placeholder="Código (ex: 001)">
-<input type="text" id="nome" placeholder="Nome do aluno">
+<input id="codigo" placeholder="Código do aluno">
+<input id="nome" placeholder="Nome do aluno">
 
-<button onclick="cadastrar()">Salvar</button>
+<button onclick="salvar()">Salvar</button>
+<button onclick="voltar()">Voltar</button>
 
 <p id="msg"></p>
 
 </div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
-  authDomain: "merenda-escolar-2.firebaseapp.com",
-  projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
-  messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-let usuario = null;
-
-// 🔐 garante que está logado
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-    } else {
-        usuario = user;
-    }
-});
-
-window.cadastrar = async function(){
-
-    const codigo = document.getElementById("codigo").value;
-    const nome = document.getElementById("nome").value;
-
-    if(!codigo || !nome){
-        document.getElementById("msg").innerText = "Preencha todos os campos";
-        return;
-    }
-
-    // 🔥 AGORA SALVA POR ESCOLA
-    await setDoc(doc(db, "escolas", usuario.uid, "alunos", codigo), {
-        codigo: codigo,
-        nome: nome
-    });
-
-    document.getElementById("msg").innerText = "Aluno cadastrado com sucesso";
-
+<script>
+function voltar(){
+    window.location.href="index.html";
 }
-
 </script>
-<button onclick="window.location.href='index.html'">Voltar</button>
+
 </body>
 </html>
