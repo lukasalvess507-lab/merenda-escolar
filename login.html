@@ -39,10 +39,10 @@ button{
     color:white;
     border:none;
     border-radius:10px;
+    font-size:16px;
 }
 </style>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
@@ -56,11 +56,14 @@ const firebaseConfig = {
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-// 🔥 ENTRA AUTOMATICAMENTE SE JÁ ESTIVER LOGADO
 firebase.auth().onAuthStateChanged((user) => {
     if(user){
+        localStorage.setItem("escolaId", user.uid);
+        localStorage.setItem("escolaNome", user.email);
         window.location.href = "index.html";
     }
 });
