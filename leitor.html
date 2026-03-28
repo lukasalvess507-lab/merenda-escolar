@@ -27,8 +27,16 @@ body{
 
 #reader{
     width:100%;
-    border:4px solid transparent;
-    border-radius:10px;
+}
+
+/* BARRA DE FEEDBACK */
+#barra{
+    width:100%;
+    height:10px;
+    margin-top:10px;
+    border-radius:5px;
+    background: transparent;
+    transition: 0.3s;
 }
 
 #msg{
@@ -60,6 +68,8 @@ button{
 
 <div id="reader"></div>
 
+<div id="barra"></div>
+
 <p id="msg">Aguardando leitura...</p>
 
 <button onclick="window.location.href='index.html'">Voltar</button>
@@ -84,22 +94,33 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const hoje = new Date().toISOString().split("T")[0];
+
 const msg = document.getElementById("msg");
-const readerDiv = document.getElementById("reader");
+const barra = document.getElementById("barra");
 
-let bloqueado = false; // controla leitura repetida
+let bloqueado = false;
 
+/* 🔊 BIP MAIS CONFIÁVEL */
 function beep(){
-    const audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
-    audio.play();
+    try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.value = 800;
+        osc.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+    }catch(e){}
 }
 
+/* FEEDBACK VISUAL */
 function feedback(cor, texto){
-    readerDiv.style.border = "4px solid " + cor;
+
+    barra.style.background = cor;
     msg.innerText = texto;
 
     setTimeout(() => {
-        readerDiv.style.border = "4px solid transparent";
+        barra.style.background = "transparent";
         msg.innerText = "Aguardando leitura...";
         bloqueado = false;
     }, 3000);
@@ -109,7 +130,7 @@ const html5QrCode = new Html5Qrcode("reader");
 
 html5QrCode.start(
     { facingMode: "environment" },
-    { fps: 10, qrbox: 250 },
+    { fps: 8, qrbox: 250 }, // leitura mais estável
     async (codigo) => {
 
         if(bloqueado) return;
@@ -131,6 +152,7 @@ html5QrCode.start(
         const registroSnap = await getDoc(registroRef);
 
         if (registroSnap.exists()) {
+            beep();
             feedback("red", "ALUNO JÁ REGISTRADO");
             return;
         }
@@ -145,7 +167,6 @@ html5QrCode.start(
         });
 
         beep();
-
         feedback("green", nome.toUpperCase());
 
     }
