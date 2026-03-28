@@ -1,3 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Resumo do Dia</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #2f4f6f;
+  margin: 0;
+  padding: 0;
+  color: white;
+  text-align: center;
+}
+
+.container {
+  background: white;
+  color: black;
+  width: 90%;
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.item {
+  border-bottom: 1px solid #ccc;
+  padding: 10px 0;
+}
+
+button {
+  margin-top: 20px;
+  padding: 10px;
+  width: 100%;
+  background: green;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>S.C.A.E</h2>
+<p>Resumo do Dia</p>
+
+<div class="container">
+
+<select id="filtroTurma">
+  <option value="todas">Todas as turmas</option>
+</select>
+
+<h3 id="total"></h3>
+
+<div id="lista"></div>
+
+<button onclick="history.back()">Voltar</button>
+
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
@@ -23,45 +91,38 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
-function carregarAlunos() {
-  onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
-    alunosMap = {};
-    snap.forEach(doc => {
-      const d = doc.data();
-      alunosMap[String(d.codigo)] = d.turma || "Sem turma";
-    });
-    renderizar();
+onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
+  alunosMap = {};
+  snap.forEach(doc => {
+    const d = doc.data();
+    alunosMap[String(d.codigo)] = d.turma || "Sem turma";
   });
-}
+});
 
-function carregarRegistros() {
-  onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
-    registros = [];
-    const hoje = new Date().toLocaleDateString("pt-BR");
+onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+  registros = [];
+  const hoje = new Date().toLocaleDateString("pt-BR");
 
-    snapshot.forEach(doc => {
-      const d = doc.data();
+  snapshot.forEach(doc => {
+    const d = doc.data();
 
-      if (d.data === hoje) {
-        registros.push({
-          nome: d.nome,
-          codigo: String(d.codigo),
-          turma: alunosMap[String(d.codigo)] || "Sem turma"
-        });
-      }
-    });
-
-    montarFiltro();
-    renderizar();
+    if (d.data === hoje) {
+      registros.push({
+        nome: d.nome,
+        codigo: String(d.codigo),
+        turma: alunosMap[String(d.codigo)] || "Sem turma"
+      });
+    }
   });
-}
+
+  montarFiltro();
+  renderizar();
+});
 
 function montarFiltro() {
   const turmas = new Set();
 
-  registros.forEach(r => {
-    turmas.add(r.turma);
-  });
+  registros.forEach(r => turmas.add(r.turma));
 
   filtro.innerHTML = '<option value="todas">Todas as turmas</option>';
 
@@ -76,9 +137,7 @@ function renderizar() {
   let contador = 0;
 
   registros.forEach(r => {
-    if (turmaSelecionada !== "todas" && r.turma !== turmaSelecionada) {
-      return;
-    }
+    if (turmaSelecionada !== "todas" && r.turma !== turmaSelecionada) return;
 
     contador++;
 
@@ -92,8 +151,8 @@ function renderizar() {
   total.innerText = "Total: " + contador + " alunos";
 }
 
-carregarAlunos();
-carregarRegistros();
-
 filtro.addEventListener("change", renderizar);
 </script>
+
+</body>
+</html>
