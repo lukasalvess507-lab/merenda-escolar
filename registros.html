@@ -106,7 +106,7 @@ onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
   snapshot.forEach(doc => {
     const d = doc.data();
 
-if (String(d.data) === String(hoje))
+if (d.data)
     registros.push({
   nome: d.nome,
   codigo: String(d.codigo),
