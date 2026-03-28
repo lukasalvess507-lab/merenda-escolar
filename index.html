@@ -3,153 +3,109 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>S.C.A.E</title>
 
 <style>
-body {
-    margin:0;
+
+body{
     font-family: Arial;
+    margin:0;
     background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:flex-start;
-
-    height:100vh;
-
-    animation: fadeIn 0.6s ease;
+    text-align:center;
 }
 
-@keyframes fadeIn{
-    from{opacity:0;}
-    to{opacity:1;}
-}
-
+/* 🔥 TOPO */
 .topo{
-    width:100%;
-    padding:15px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    font-size:13px;
+    padding:10px 20px;
 }
 
-.titulo{
-    text-align:center;
+/* 🔥 NOME DA ESCOLA */
+.escola{
+    font-size:18px;
+    font-weight:bold;
+    background: rgba(255,255,255,0.15);
+    padding:6px 12px;
+    border-radius:8px;
+}
+
+/* 🔥 BOTÃO SAIR */
+.sair{
+    background:#ff4d4d;
+    color:white;
+    padding:6px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+/* 🔥 TÍTULO */
+h1{
     margin-top:10px;
 }
 
-.titulo h2{
-    margin:0;
-}
-
-.titulo p{
-    margin:0;
-    font-size:12px;
-    opacity:0.8;
-}
-
-.container {
+.container{
     background:white;
     color:black;
-    width:90%;
-    max-width:380px;
-    border-radius:18px;
     padding:20px;
-    margin-top:20px;
-
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-
-    max-height:65vh;
-    overflow-y:auto;
+    border-radius:12px;
+    max-width:350px;
+    margin:20px auto;
 }
 
-button {
+/* BOTÕES */
+button{
     width:100%;
-    padding:16px;
+    padding:14px;
     margin:8px 0;
     background:#1f4d2e;
     color:white;
     border:none;
-    border-radius:12px;
-    font-size:15px;
-    font-weight:bold;
-
-    transition: all 0.2s;
+    border-radius:10px;
+    font-size:16px;
 }
 
-button:active{
-    transform: scale(0.95);
-    background:#163822;
-}
-
-#sair{
-    background:none;
-    border:none;
-    color:white;
-    font-size:13px;
-}
 </style>
-
 </head>
 
 <body>
 
+<!-- 🔥 TOPO -->
 <div class="topo">
-    <div id="escola">Carregando...</div>
-    <button id="sair" onclick="logout()">Sair</button>
+    <div class="escola">Minha Escola</div>
+    <div class="sair" onclick="sair()">Sair</div>
 </div>
 
-<div class="titulo">
-    <h2>S.C.A.E</h2>
-    <p>Sistema de Controle de Almoço Escolar</p>
-</div>
+<h1>S.C.A.E</h1>
+<p>Sistema de Controle de Almoço Escolar</p>
 
 <div class="container">
 
-<button onclick="location.href='dashboard.html'">Dashboard</button>
-<button onclick="location.href='importar.html'">Importar Alunos</button>
-<button onclick="location.href='leitor.html'">Ler QR Code</button>
-<button onclick="location.href='cadastro.html'">Cadastrar Aluno</button>
-<button onclick="location.href='alunos.html'">Ver Alunos</button>
-<button onclick="location.href='registros.html'">Resumo do Dia</button>
-<button onclick="location.href='historico.html'">Histórico</button>
-<button onclick="location.href='grafico.html'">Gráfico</button>
-<button onclick="location.href='qrcode.html'">Gerar QR Code</button>
+<button onclick="ir('painel.html')">Dashboard</button>
+<button onclick="ir('importar.html')">Importar Alunos</button>
+<button onclick="ir('leitor.html')">Ler QR Code</button>
+<button onclick="ir('cadastro.html')">Cadastrar Aluno</button>
+<button onclick="ir('alunos.html')">Ver Alunos</button>
+<button onclick="ir('registro.html')">Resumo do Dia</button>
+<button onclick="ir('historico.html')">Histórico</button>
+<button onclick="ir('grafico.html')">Gráfico</button>
+<button onclick="ir('qrcode.html')">Gerar QR Code</button>
 
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+function ir(pagina){
+    window.location.href = pagina;
+}
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
-  authDomain: "merenda-escolar-2.firebaseapp.com",
-  projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
-  messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
-    document.getElementById("escola").innerText = user.email;
-});
-
-window.logout = function(){
-    signOut(auth).then(() => {
-        window.location.href = "login.html";
-    });
+function sair(){
+    alert("Saindo...");
+    window.location.href = "login.html";
 }
 
 </script>
