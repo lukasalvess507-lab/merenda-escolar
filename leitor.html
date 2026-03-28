@@ -14,6 +14,7 @@ body{
     color:white;
     text-align:center;
     padding:20px;
+    transition: background 0.3s;
 }
 
 .container{
@@ -27,6 +28,12 @@ body{
 
 #reader{
     width:100%;
+}
+
+#msg{
+    margin-top:10px;
+    font-size:20px;
+    font-weight:bold;
 }
 
 button{
@@ -81,53 +88,58 @@ function beep(){
     audio.play();
 }
 
-function iniciarLeitor(){
-
-    const html5QrCode = new Html5Qrcode("reader");
-
-    html5QrCode.start(
-        { facingMode: "environment" }, // câmera traseira
-        { fps: 10, qrbox: 250 },
-        async (codigo) => {
-
-            document.getElementById("msg").innerText = "Lendo...";
-
-            const alunoRef = doc(db, "alunos", codigo);
-            const alunoSnap = await getDoc(alunoRef);
-
-            if (!alunoSnap.exists()) {
-                document.getElementById("msg").innerText = "Aluno não encontrado";
-                return;
-            }
-
-            const nome = alunoSnap.data().nome;
-
-            const registroRef = doc(db, "registros", codigo + "_" + hoje);
-            const registroSnap = await getDoc(registroRef);
-
-            if (registroSnap.exists()) {
-                document.getElementById("msg").innerText = "Aluno já registrado hoje";
-                return;
-            }
-
-            const hora = new Date().toLocaleTimeString();
-
-            await setDoc(registroRef, {
-                nome: nome,
-                codigo: codigo,
-                data: hoje,
-                hora: hora
-            });
-
-            beep();
-
-            document.getElementById("msg").innerText = "Registrado: " + nome;
-
-        }
-    );
+function flash(cor){
+    document.body.style.background = cor;
+    setTimeout(() => {
+        document.body.style.background = "linear-gradient(135deg, #1e3a5f, #2a4d69)";
+    }, 500);
 }
 
-iniciarLeitor();
+const html5QrCode = new Html5Qrcode("reader");
+
+html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    async (codigo) => {
+
+        document.getElementById("msg").innerText = "Lendo...";
+
+        const alunoRef = doc(db, "alunos", codigo);
+        const alunoSnap = await getDoc(alunoRef);
+
+        if (!alunoSnap.exists()) {
+            document.getElementById("msg").innerText = "Aluno não encontrado";
+            flash("orange");
+            return;
+        }
+
+        const nome = alunoSnap.data().nome;
+
+        const registroRef = doc(db, "registros", codigo + "_" + hoje);
+        const registroSnap = await getDoc(registroRef);
+
+        if (registroSnap.exists()) {
+            document.getElementById("msg").innerText = "JA REGISTRADO";
+            flash("red");
+            return;
+        }
+
+        const hora = new Date().toLocaleTimeString();
+
+        await setDoc(registroRef, {
+            nome: nome,
+            codigo: codigo,
+            data: hoje,
+            hora: hora
+        });
+
+        beep();
+
+        document.getElementById("msg").innerText = nome.toUpperCase();
+        flash("green");
+
+    }
+);
 
 window.voltar = function(){
     window.location.href="index.html";
