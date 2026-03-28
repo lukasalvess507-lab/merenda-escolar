@@ -2,35 +2,43 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - S.C.A.E</title>
 
 <style>
 body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 20px;
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
+    color:white;
+    text-align:center;
+    padding:20px;
 }
 
-.card{
-    background: white;
-    color: black;
-    padding: 20px;
-    border-radius: 15px;
-    margin: 10px auto;
-    max-width: 400px;
+.container{
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:12px;
+    max-width:350px;
+    margin:auto;
 }
 
-h1{
-    font-size: 40px;
-    margin: 0;
+.box{
+    background:#f2f2f2;
+    padding:15px;
+    border-radius:10px;
+    margin:10px 0;
 }
 
 button{
-    margin-top: 15px;
-    padding: 10px;
-    width: 100%;
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    background:#1f4d2e;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -39,22 +47,25 @@ button{
 
 <h2>Painel Geral</h2>
 
-<div class="card">
-    <h3>Total Hoje</h3>
-    <h1 id="total">0</h1>
+<div class="container">
+
+<div class="box">
+<h3>Total Hoje</h3>
+<h1 id="total">0</h1>
 </div>
 
-<div class="card" id="ultimos">
-    Carregando...
+<div class="box" id="lista">
+Carregando...
 </div>
 
 <button onclick="voltar()">Voltar</button>
 
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -67,47 +78,33 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-function hoje(){
-    return new Date().toLocaleDateString("sv-SE");
-}
+const hoje = new Date().toISOString().split("T")[0];
 
-onAuthStateChanged(auth, (user) => {
+const q = query(collection(db, "registros"), where("data", "==", hoje));
 
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+onSnapshot(q, (snapshot) => {
 
-    onSnapshot(collection(db, "escolas", user.uid, "registros"), (snapshot) => {
+    let total = 0;
+    let html = "";
 
-        let total = 0;
-        let lista = "";
+    snapshot.forEach(doc => {
+        const d = doc.data();
 
-        snapshot.forEach((doc) => {
+        // 🔥 CORREÇÃO DO UNDEFINED
+        const nome = d.nome ? d.nome : "Aluno não identificado";
 
-            const r = doc.data();
-
-            if(r.data === hoje()){
-                total++;
-
-                lista += `<div>${r.nome} - ${r.hora}</div>`;
-            }
-
-        });
-
-        document.getElementById("total").innerText = total;
-
-        document.getElementById("ultimos").innerHTML =
-            lista || "Nenhum registro hoje";
-
+        html += nome + " - " + d.hora + "<br>";
+        total++;
     });
+
+    document.getElementById("total").innerText = total;
+    document.getElementById("lista").innerHTML = html || "Nenhum registro hoje";
 
 });
 
 window.voltar = function(){
-    window.location.href = "index.html";
+    window.location.href="index.html";
 }
 
 </script>
