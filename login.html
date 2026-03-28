@@ -2,64 +2,104 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Login</title>
+<title>S.C.A.E</title>
 
 <style>
-body {
+body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 40px;
+    background: linear-gradient(135deg, #1f4d2e, #2f3a73);
+    text-align:center;
+    padding:40px;
+    color:white;
 }
 
-.card {
-    background: white;
-    color: black;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 300px;
-    margin: auto;
+.container{
+    background:white;
+    color:black;
+    padding:25px;
+    border-radius:12px;
+    max-width:320px;
+    margin:auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
+/* LOGO */
+.logo{
+    width:80px;
+    margin-bottom:10px;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    background: #2f3a73;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    margin-top: 10px;
+/* SIGLA */
+.sigla{
+    font-size:28px;
+    font-weight:bold;
+    margin:5px 0;
 }
 
-.link {
-    margin-top: 10px;
-    display: block;
-    color: #2f3a73;
-    cursor: pointer;
+/* NOME COMPLETO */
+.subtitulo{
+    font-size:13px;
+    color:#555;
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    background:#2f3a73;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    transition: all 0.2s;
+}
+
+button:hover{
+    background:#253061;
+}
+
+button:active{
+    transform: scale(0.97);
+}
+
+.link{
+    margin-top:10px;
+    font-size:13px;
+    color:#2f3a73;
+    cursor:pointer;
+}
+
+#msg{
+    margin-top:10px;
+    font-size:13px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Acesso ao Sistema</h2>
+<div class="container">
 
-<div class="card">
+<img src="logo.png" class="logo">
 
-<input type="email" id="email" placeholder="Email da escola">
+<div class="sigla">S.C.A.E</div>
+<div class="subtitulo">Sistema de Controle de Almoço Escolar</div>
+
+<input type="email" id="email" placeholder="E-mail">
 <input type="password" id="senha" placeholder="Senha">
 
 <button onclick="login()">Entrar</button>
-<button onclick="cadastrar()">Criar Conta</button>
 
-<span class="link" onclick="recuperarSenha()">Esqueci minha senha</span>
+<div class="link" onclick="cadastrar()">Criar conta</div>
 
 <p id="msg"></p>
 
@@ -68,12 +108,7 @@ button {
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { 
-    getAuth, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword,
-    sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -81,15 +116,13 @@ const firebaseConfig = {
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.firebasestorage.app",
   messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9",
-  measurementId: "G-58NGTHZ9V2"
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 window.login = function(){
-
     const email = document.getElementById("email").value;
     const senha = document.getElementById("senha").value;
 
@@ -97,14 +130,12 @@ window.login = function(){
     .then(() => {
         window.location.href = "index.html";
     })
-    .catch((error) => {
-        document.getElementById("msg").innerText = error.message;
+    .catch(() => {
+        document.getElementById("msg").innerText = "Erro ao entrar";
     });
-
 }
 
 window.cadastrar = function(){
-
     const email = document.getElementById("email").value;
     const senha = document.getElementById("senha").value;
 
@@ -112,29 +143,9 @@ window.cadastrar = function(){
     .then(() => {
         document.getElementById("msg").innerText = "Conta criada com sucesso";
     })
-    .catch((error) => {
-        document.getElementById("msg").innerText = error.message;
+    .catch(() => {
+        document.getElementById("msg").innerText = "Erro ao cadastrar";
     });
-
-}
-
-window.recuperarSenha = function(){
-
-    const email = document.getElementById("email").value;
-
-    if (!email) {
-        document.getElementById("msg").innerText = "Digite seu email primeiro";
-        return;
-    }
-
-    sendPasswordResetEmail(auth, email)
-    .then(() => {
-        document.getElementById("msg").innerText = "Email de recuperação enviado";
-    })
-    .catch((error) => {
-        document.getElementById("msg").innerText = error.message;
-    });
-
 }
 
 </script>
