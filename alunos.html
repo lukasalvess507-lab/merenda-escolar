@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alunos - S.C.A.E</title>
+<title>Alunos</title>
 
 <style>
 body{
@@ -23,22 +23,40 @@ body{
     margin:auto;
 }
 
-.aluno{
-    background:#f2f2f2;
+.item{
     padding:10px;
-    border-radius:6px;
-    margin:5px 0;
+    border-bottom:1px solid #ccc;
+}
+
+.nome{
+    font-weight:bold;
+}
+
+.botoes{
+    margin-top:5px;
 }
 
 button{
+    padding:8px;
+    margin:3px;
+    border:none;
+    border-radius:6px;
+    color:white;
+}
+
+.editar{
+    background:#2f7a4f;
+}
+
+.excluir{
+    background:#c0392b;
+}
+
+.voltar{
     width:100%;
     padding:12px;
-    margin-top:10px;
+    margin-top:15px;
     background:#1f4d2e;
-    color:white;
-    border:none;
-    border-radius:8px;
-    font-weight:bold;
 }
 </style>
 </head>
@@ -48,16 +66,16 @@ button{
 <h2>S.C.A.E</h2>
 <p>Lista de Alunos</p>
 
-<div class="container" id="lista">
-Carregando...
+<div class="container">
+<div id="lista"></div>
 </div>
 
-<button onclick="voltar()">Voltar</button>
+<button class="voltar" onclick="window.location.href='index.html'">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -71,25 +89,57 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function carregarAlunos(){
+const lista = document.getElementById("lista");
 
-    const querySnapshot = await getDocs(collection(db, "alunos"));
+onSnapshot(collection(db, "alunos"), (snapshot) => {
 
-    let html = "";
+    lista.innerHTML = "";
 
-    querySnapshot.forEach(doc => {
-        const d = doc.data();
-        html += `<div class="aluno">${d.codigo} - ${d.nome}</div>`;
+    snapshot.forEach(docSnap => {
+
+        const dados = docSnap.data();
+        const id = docSnap.id;
+
+        const div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+            <div class="nome">${dados.nome}</div>
+            Código: ${dados.codigo}
+            <div class="botoes">
+                <button class="editar" onclick="editar('${id}', '${dados.nome}', '${dados.codigo}')">Editar</button>
+                <button class="excluir" onclick="excluir('${id}')">Excluir</button>
+            </div>
+        `;
+
+        lista.appendChild(div);
+
     });
 
-    document.getElementById("lista").innerHTML = html || "Nenhum aluno cadastrado";
+});
+
+window.excluir = async function(id){
+
+    if(confirm("Deseja excluir este aluno?")){
+        await deleteDoc(doc(db, "alunos", id));
+    }
 
 }
 
-carregarAlunos();
+window.editar = async function(id, nomeAtual, codigoAtual){
 
-window.voltar = function(){
-    window.location.href="index.html";
+    const novoNome = prompt("Editar nome:", nomeAtual);
+    const novoCodigo = prompt("Editar código:", codigoAtual);
+
+    if(novoNome && novoCodigo){
+
+        await updateDoc(doc(db, "alunos", id), {
+            nome: novoNome,
+            codigo: novoCodigo
+        });
+
+    }
+
 }
 
 </script>
