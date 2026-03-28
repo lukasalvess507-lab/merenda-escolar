@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Gráfico</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,19 +13,18 @@ body{
     background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
     text-align:center;
-    padding:20px;
 }
 
 .container{
     background:white;
     padding:20px;
-    border-radius:15px;
-    max-width:350px;
-    margin:auto;
+    border-radius:12px;
+    max-width:400px;
+    margin:40px auto;
 }
 
 button{
-    width:100%;
+    width:90%;
     padding:12px;
     margin-top:15px;
     background:#1f4d2e;
@@ -43,7 +41,7 @@ button{
 <p>Frequência da Merenda</p>
 
 <div class="container">
-<canvas id="grafico"></canvas>
+    <canvas id="grafico"></canvas>
 </div>
 
 <button onclick="window.location.href='index.html'">Voltar</button>
@@ -57,7 +55,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -65,65 +63,46 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let chart;
+function hojeBrasil(){
+    return new Date().toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo'
+    });
+}
+
+const ctx = document.getElementById('grafico');
+
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [{
+            label: 'Alunos por dia',
+            data: []
+        }]
+    }
+});
 
 onSnapshot(collection(db, "registros"), (snapshot) => {
 
     const contagem = {};
 
     snapshot.forEach(doc => {
-
         const d = doc.data();
-        const dataOriginal = d.data;
-
-        if(!dataOriginal || !dataOriginal.includes("-")) return;
-
-        const partes = dataOriginal.split("-");
-
-        if(partes.length !== 3) return;
-
-        const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
-
-        if(isNaN(dataObj)) return;
-
-        dataObj.setDate(dataObj.getDate() - 1);
-
-        const data = dataObj.toLocaleDateString('pt-BR');
+        const data = d.data;
 
         if(!contagem[data]){
             contagem[data] = 0;
         }
 
         contagem[data]++;
-
     });
 
-    const labels = Object.keys(contagem).sort();
-    const valores = labels.map(l => contagem[l]);
+    const datas = Object.keys(contagem).sort();
+    const valores = Object.values(contagem);
 
-    if(chart){
-        chart.destroy();
-    }
-
-    const ctx = document.getElementById('grafico');
-
-    chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Alunos por dia',
-                data: valores,
-                borderRadius: 10,
-                backgroundColor: '#2f7a4f'
-            }]
-        },
-        options: {
-            responsive:true,
-            animation:{ duration:800 },
-            scales:{ y:{ beginAtZero:true } }
-        }
-    });
+    chart.data.labels = datas;
+    chart.data.datasets[0].data = valores;
+    chart.update();
 
 });
 
