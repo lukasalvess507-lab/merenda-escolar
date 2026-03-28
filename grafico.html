@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gráfico - S.C.A.E</title>
+
+<title>Gráfico</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -19,7 +20,7 @@ body{
 .container{
     background:white;
     padding:20px;
-    border-radius:12px;
+    border-radius:15px;
     max-width:350px;
     margin:auto;
 }
@@ -27,12 +28,11 @@ body{
 button{
     width:100%;
     padding:12px;
-    margin-top:10px;
+    margin-top:15px;
     background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
-    font-weight:bold;
 }
 </style>
 </head>
@@ -46,12 +46,12 @@ button{
 <canvas id="grafico"></canvas>
 </div>
 
-<button onclick="voltar()">Voltar</button>
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -65,39 +65,64 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function carregarGrafico(){
+let chart;
 
-    const snapshot = await getDocs(collection(db, "registros"));
+onSnapshot(collection(db, "registros"), (snapshot) => {
 
-    const dados = {};
+    const contagem = {};
 
     snapshot.forEach(doc => {
+
         const d = doc.data();
-        dados[d.data] = (dados[d.data] || 0) + 1;
+        const data = d.data;
+
+        if(!contagem[data]){
+            contagem[data] = 0;
+        }
+
+        contagem[data]++;
+
     });
 
-    const labels = Object.keys(dados);
-    const valores = Object.values(dados);
+    const labels = Object.keys(contagem).sort();
+    const valores = labels.map(l => contagem[l]);
 
-    new Chart(document.getElementById("grafico"), {
-        type: "bar",
+    if(chart){
+        chart.destroy();
+    }
+
+    const ctx = document.getElementById('grafico');
+
+    chart = new Chart(ctx, {
+        type: 'bar',
         data: {
             labels: labels,
             datasets: [{
-                label: "Alunos por dia",
+                label: 'Alunos por dia',
                 data: valores,
-                backgroundColor: "#1f4d2e"
+                borderRadius: 10,
+                backgroundColor: '#2f7a4f'
             }]
+        },
+        options: {
+            responsive:true,
+            animation:{
+                duration:800
+            },
+            plugins:{
+                legend:{
+                    display:true
+                }
+            },
+            scales:{
+                y:{
+                    beginAtZero:true
+                }
+            }
         }
     });
 
-}
-
-carregarGrafico();
-
-window.voltar = function(){
-    window.location.href="index.html";
-}
+});
 
 </script>
 
