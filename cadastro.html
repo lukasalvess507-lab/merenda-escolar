@@ -3,36 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro</title>
+
+<title>Cadastrar Aluno</title>
 
 <style>
 body{
     font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
+    background:#f5f5f5;
     text-align:center;
-    padding:20px;
 }
 
 .container{
     background:white;
-    color:black;
     padding:20px;
-    border-radius:12px;
-    max-width:350px;
-    margin:auto;
+    border-radius:10px;
+    max-width:300px;
+    margin:50px auto;
 }
 
 input{
     width:90%;
     padding:10px;
-    margin:8px;
-    border-radius:8px;
-    border:1px solid #ccc;
+    margin:5px;
 }
 
 button{
-    width:100%;
+    width:95%;
     padding:12px;
     margin-top:10px;
     background:#1f4d2e;
@@ -40,31 +36,26 @@ button{
     border:none;
     border-radius:8px;
 }
-
-#msg{
-    margin-top:10px;
-    color:green;
-}
 </style>
 </head>
 
 <body>
 
-<h2>Cadastrar Aluno</h2>
-
 <div class="container">
 
-<input id="codigo" placeholder="Código">
-<input id="nome" placeholder="Nome do aluno">
-<input id="turma" placeholder="Turma (ex: 9º A)">
+<h3>Cadastrar Aluno</h3>
+
+<input type="text" id="codigo" placeholder="Código">
+<input type="text" id="nome" placeholder="Nome do aluno">
+<input type="text" id="turma" placeholder="Turma">
 
 <button onclick="salvar()">Salvar</button>
 
 <p id="msg"></p>
 
-</div>
+<button onclick="voltar()">Voltar</button>
 
-<button onclick="window.location.href='index.html'">Voltar</button>
+</div>
 
 <script type="module">
 
@@ -75,7 +66,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -89,27 +80,31 @@ window.salvar = async function(){
     const nome = document.getElementById("nome").value;
     const turma = document.getElementById("turma").value;
 
-    if(!codigo || !nome || !turma){
-        alert("Preencha todos os campos");
+    const escolaId = localStorage.getItem("escolaId");
+
+    if(!escolaId){
+        alert("Erro: escola não identificada");
         return;
     }
 
-    await addDoc(collection(db, "alunos"), {
-        codigo: codigo,
-        nome: nome,
-        turma: turma
-    });
+    await addDoc(
+        collection(db, "escolas", escolaId, "alunos"),
+        {
+            codigo: codigo,
+            nome: nome,
+            turma: turma
+        }
+    );
 
     document.getElementById("msg").innerText = "Aluno cadastrado com sucesso";
-
-    setTimeout(()=>{
-        document.getElementById("msg").innerText = "";
-    },2000);
 
     document.getElementById("codigo").value = "";
     document.getElementById("nome").value = "";
     document.getElementById("turma").value = "";
+}
 
+window.voltar = function(){
+    window.location.href = "index.html";
 }
 
 </script>
