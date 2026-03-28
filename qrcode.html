@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerar QR Code - S.C.A.E</title>
+<title>Leitor QR - S.C.A.E</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body{
@@ -25,12 +25,17 @@ body{
     margin:auto;
 }
 
-input{
+#reader{
     width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:6px;
-    border:1px solid #ccc;
+    border:4px solid transparent;
+    border-radius:10px;
+}
+
+#msg{
+    margin-top:15px;
+    font-size:22px;
+    font-weight:bold;
+    min-height:30px;
 }
 
 button{
@@ -43,70 +48,108 @@ button{
     border-radius:8px;
     font-weight:bold;
 }
-
-#qrcode{
-    margin-top:15px;
-}
 </style>
 </head>
 
 <body>
 
 <h2>S.C.A.E</h2>
-<p>Gerar QR Code</p>
+<p>Leitor de QR Code</p>
 
 <div class="container">
 
-<input id="codigo" placeholder="Digite o código do aluno">
+<div id="reader"></div>
 
-<button onclick="gerar()">Gerar QR Code</button>
+<p id="msg">Aguardando leitura...</p>
 
-<div id="qrcode"></div>
-
-<button id="baixarBtn" style="display:none;" onclick="baixar()">Baixar QR Code</button>
-
-<button onclick="voltar()">Voltar</button>
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 </div>
 
-<script>
+<script type="module">
 
-let canvasQR = null;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-function gerar(){
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
 
-    const codigo = document.getElementById("codigo").value;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    if(!codigo){
-        alert("Digite um código");
-        return;
+const hoje = new Date().toISOString().split("T")[0];
+const msg = document.getElementById("msg");
+const readerDiv = document.getElementById("reader");
+
+let bloqueado = false; // controla leitura repetida
+
+function beep(){
+    const audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
+    audio.play();
+}
+
+function feedback(cor, texto){
+    readerDiv.style.border = "4px solid " + cor;
+    msg.innerText = texto;
+
+    setTimeout(() => {
+        readerDiv.style.border = "4px solid transparent";
+        msg.innerText = "Aguardando leitura...";
+        bloqueado = false;
+    }, 3000);
+}
+
+const html5QrCode = new Html5Qrcode("reader");
+
+html5QrCode.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    async (codigo) => {
+
+        if(bloqueado) return;
+        bloqueado = true;
+
+        msg.innerText = "Lendo...";
+
+        const alunoRef = doc(db, "alunos", codigo);
+        const alunoSnap = await getDoc(alunoRef);
+
+        if (!alunoSnap.exists()) {
+            feedback("orange", "Aluno não encontrado");
+            return;
+        }
+
+        const nome = alunoSnap.data().nome;
+
+        const registroRef = doc(db, "registros", codigo + "_" + hoje);
+        const registroSnap = await getDoc(registroRef);
+
+        if (registroSnap.exists()) {
+            feedback("red", "ALUNO JÁ REGISTRADO");
+            return;
+        }
+
+        const hora = new Date().toLocaleTimeString();
+
+        await setDoc(registroRef, {
+            nome: nome,
+            codigo: codigo,
+            data: hoje,
+            hora: hora
+        });
+
+        beep();
+
+        feedback("green", nome.toUpperCase());
+
     }
-
-    document.getElementById("qrcode").innerHTML = "";
-
-    QRCode.toCanvas(codigo, { width:200 }, function (err, canvas) {
-        if(err) return;
-
-        canvasQR = canvas;
-        document.getElementById("qrcode").appendChild(canvas);
-
-        document.getElementById("baixarBtn").style.display = "block";
-    });
-
-}
-
-function baixar(){
-
-    const link = document.createElement("a");
-    link.download = "qrcode.png";
-    link.href = canvasQR.toDataURL();
-    link.click();
-
-}
-
-function voltar(){
-    window.location.href="index.html";
-}
+);
 
 </script>
 
