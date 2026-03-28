@@ -2,14 +2,15 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Gerar QR Code</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerar QR Code - S.C.A.E</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
 <style>
 body{
     font-family: Arial;
-    background:#2f3a73;
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
     text-align:center;
     padding:20px;
@@ -19,53 +20,58 @@ body{
     background:white;
     color:black;
     padding:20px;
-    border-radius:10px;
+    border-radius:12px;
     max-width:350px;
     margin:auto;
 }
 
 input{
     width:100%;
-    padding:10px;
+    padding:12px;
     margin:10px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
 }
 
 button{
     width:100%;
-    padding:10px;
+    padding:12px;
     margin-top:10px;
+    background:#1f4d2e;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
 }
 
 #qrcode{
-    margin-top:20px;
-}
-
-/* BOTÃO ESCONDIDO */
-#baixarBtn{
-    display:none;
+    margin-top:15px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Gerar QR Code</h2>
+<h2>S.C.A.E</h2>
+<p>Gerar QR Code</p>
 
 <div class="container">
 
-<input type="text" id="codigo" placeholder="Digite o código do aluno">
+<input id="codigo" placeholder="Digite o código do aluno">
 
 <button onclick="gerar()">Gerar QR Code</button>
 
 <div id="qrcode"></div>
 
-<button id="baixarBtn" onclick="baixar()">Baixar QR Code</button>
+<button id="baixarBtn" style="display:none;" onclick="baixar()">Baixar QR Code</button>
 
 <button onclick="voltar()">Voltar</button>
 
 </div>
 
 <script>
+
+let canvasQR = null;
 
 function gerar(){
 
@@ -78,33 +84,28 @@ function gerar(){
 
     document.getElementById("qrcode").innerHTML = "";
 
-    new QRCode(document.getElementById("qrcode"), {
-        text: codigo,
-        width: 200,
-        height: 200
+    QRCode.toCanvas(codigo, { width:200 }, function (err, canvas) {
+        if(err) return;
+
+        canvasQR = canvas;
+        document.getElementById("qrcode").appendChild(canvas);
+
+        document.getElementById("baixarBtn").style.display = "block";
     });
 
-    // MOSTRA BOTÃO BAIXAR
-    document.getElementById("baixarBtn").style.display = "block";
 }
 
 function baixar(){
 
-    const img = document.querySelector("#qrcode img");
-
-    if(!img){
-        alert("Erro ao gerar QR Code");
-        return;
-    }
-
     const link = document.createElement("a");
-    link.href = img.src;
     link.download = "qrcode.png";
+    link.href = canvasQR.toDataURL();
     link.click();
+
 }
 
 function voltar(){
-    window.location.href = "index.html";
+    window.location.href="index.html";
 }
 
 </script>
