@@ -41,8 +41,16 @@ button{
     border-radius:8px;
 }
 
-canvas{
+#areaQR{
     margin-top:15px;
+    background:white;
+    padding:10px;
+    border-radius:10px;
+}
+
+#codigoTexto{
+    margin-top:5px;
+    font-weight:bold;
 }
 
 </style>
@@ -59,7 +67,10 @@ canvas{
 
 <button onclick="gerar()">Gerar QR Code</button>
 
+<div id="areaQR">
 <canvas id="canvas"></canvas>
+<div id="codigoTexto"></div>
+</div>
 
 <button onclick="baixar()">Baixar QR Code</button>
 
@@ -72,7 +83,7 @@ canvas{
 <script>
 
 let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+let codigoAtual = "";
 
 function gerar(){
 
@@ -83,47 +94,40 @@ function gerar(){
         return;
     }
 
-    // gerar QR base
+    codigoAtual = codigo;
+
     QRCode.toCanvas(canvas, codigo, {
         width: 250,
-        margin: 2,
-        errorCorrectionLevel: 'H' // ALTA correção (IMPORTANTE)
-    }, function (error) {
-
-        if(error) return console.error(error);
-
-        // desenhar código no centro
-        const tamanho = 250;
-
-        const caixa = tamanho * 0.18; // ~10-18% seguro
-        const pos = (tamanho - caixa) / 2;
-
-        // fundo branco
-        ctx.fillStyle = "white";
-        ctx.fillRect(pos, pos, caixa, caixa);
-
-        // texto pequeno
-        ctx.fillStyle = "black";
-        ctx.font = "bold 20px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-
-        ctx.fillText(codigo, tamanho/2, tamanho/2);
-
+        margin: 2
     });
+
+    document.getElementById("codigoTexto").innerText = "Código: " + codigo;
 
 }
 
 function baixar(){
 
-    const link = document.createElement("a");
-    link.download = "qrcode.png";
-    link.href = canvas.toDataURL();
-    link.click();
+    if(!codigoAtual){
+        alert("Gere um QR Code primeiro");
+        return;
+    }
+
+    const area = document.getElementById("areaQR");
+
+    html2canvas(area).then(canvasFinal => {
+
+        const link = document.createElement("a");
+        link.download = "QR_" + codigoAtual + ".png";
+        link.href = canvasFinal.toDataURL();
+        link.click();
+
+    });
 
 }
 
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </body>
 </html>
