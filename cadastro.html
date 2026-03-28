@@ -59,11 +59,11 @@ button{
 <input id="codigo" placeholder="Código do aluno">
 <input id="nome" placeholder="Nome do aluno">
 
-<button onclick="salvar()">Salvar</button>
+<button id="btnSalvar">Salvar</button>
 
 <p id="msg"></p>
 
-<button onclick="voltar()">Voltar</button>
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 </div>
 
@@ -84,31 +84,44 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.salvar = async function(){
+const msg = document.getElementById("msg");
 
-    const codigo = document.getElementById("codigo").value;
-    const nome = document.getElementById("nome").value;
+document.getElementById("btnSalvar").addEventListener("click", async () => {
+
+    const codigo = document.getElementById("codigo").value.trim();
+    const nome = document.getElementById("nome").value.trim();
+
+    msg.innerText = ""; // limpa antes
 
     if(!codigo || !nome){
-        document.getElementById("msg").innerText = "Preencha todos os campos";
+        msg.innerText = "Preencha todos os campos";
         return;
     }
 
-    await setDoc(doc(db, "alunos", codigo), {
-        codigo: codigo,
-        nome: nome
-    });
+    try {
 
-    document.getElementById("msg").innerText = "Aluno cadastrado com sucesso";
+        await setDoc(doc(db, "alunos", codigo), {
+            codigo: codigo,
+            nome: nome
+        });
 
-    document.getElementById("codigo").value = "";
-    document.getElementById("nome").value = "";
+        msg.innerText = "Aluno cadastrado com sucesso";
 
-}
+        // limpa campos
+        document.getElementById("codigo").value = "";
+        document.getElementById("nome").value = "";
 
-window.voltar = function(){
-    window.location.href="index.html";
-}
+        // REMOVE mensagem depois de 2 segundos
+        setTimeout(() => {
+            msg.innerText = "";
+        }, 2000);
+
+    } catch(e){
+        msg.innerText = "Erro ao salvar";
+        console.error(e);
+    }
+
+});
 
 </script>
 
