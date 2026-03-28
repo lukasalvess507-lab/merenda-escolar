@@ -2,154 +2,80 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Leitor QR Code</title>
-
-<script src="https://unpkg.com/html5-qrcode"></script>
+<title>Leitor QR - S.C.A.E</title>
 
 <style>
 body{
     font-family: Arial;
-    background:#2f3a73;
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
     text-align:center;
+    padding:20px;
+    animation: fadeIn 0.8s ease;
 }
 
-#reader{
-    width:300px;
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.container{
+    background:white;
+    color:black;
+    padding:20px;
+    border-radius:12px;
+    max-width:350px;
     margin:auto;
 }
 
-#mensagem{
-    margin-top:20px;
-    font-size:22px;
+#video{
+    width:100%;
+    border-radius:10px;
+}
+
+.msg{
+    margin-top:10px;
     font-weight:bold;
 }
 
-.erro{
-    background:red;
-    padding:10px;
+button{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    background:#1f4d2e;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.2s;
 }
 
-.sucesso{
-    background:green;
-    padding:10px;
+button:active{
+    transform:scale(0.96);
 }
 </style>
 </head>
 
 <body>
 
-<h2>Leitor QR Code</h2>
+<h2>S.C.A.E</h2>
+<p>Leitor de QR Code</p>
 
-<div id="reader"></div>
+<div class="container">
 
-<div id="mensagem">Aguardando leitura...</div>
+<video id="video"></video>
+
+<div class="msg" id="msg">Aguardando leitura...</div>
 
 <button onclick="voltar()">Voltar</button>
 
-<script type="module">
+</div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
-  authDomain: "merenda-escolar-2.firebaseapp.com",
-  projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
-  messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-const hoje = new Date().toISOString().split("T")[0];
-const msg = document.getElementById("mensagem");
-
-let bloqueado = false;
-
-// 🔊 SOM (BIP)
-function bip(){
-    const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
-    audio.play();
+<script>
+function voltar(){
+    window.location.href="index.html";
 }
-
-// MENSAGEM
-function mostrar(texto, tipo){
-    msg.innerText = texto;
-    msg.className = tipo;
-
-    setTimeout(()=>{
-        msg.innerText = "Aguardando leitura...";
-        msg.className = "";
-        bloqueado = false;
-    },2000);
-}
-
-// PROCESSAR QR
-async function processar(codigo){
-
-    if(bloqueado) return;
-    bloqueado = true;
-
-    const user = auth.currentUser;
-    if(!user){
-        mostrar("Erro de login", "erro");
-        return;
-    }
-
-    const ref = doc(db, "escolas", user.uid, "registros", hoje + "_" + codigo);
-
-    const jaExiste = await getDoc(ref);
-
-    if(jaExiste.exists()){
-        bip();
-        mostrar("ALUNO JÁ REGISTRADO HOJE", "erro");
-        return;
-    }
-
-    await setDoc(ref,{
-        codigo: codigo,
-        data: hoje,
-        hora: new Date().toLocaleTimeString()
-    });
-
-    bip();
-    mostrar("REGISTRADO COM SUCESSO", "sucesso");
-}
-
-// INICIAR CÂMERA (TRASEIRA)
-const html5QrCode = new Html5Qrcode("reader");
-
-Html5Qrcode.getCameras().then(devices => {
-
-    if (devices && devices.length) {
-
-        let traseira = devices.find(d => d.label.toLowerCase().includes("back"));
-
-        let cameraId = traseira ? traseira.id : devices[devices.length - 1].id;
-
-        html5QrCode.start(
-            cameraId,
-            {
-                fps: 10,
-                qrbox: 250
-            },
-            (decodedText) => {
-                processar(decodedText);
-            }
-        );
-    }
-});
-
-// VOLTAR
-window.voltar = function(){
-    window.location.href = "index.html";
-}
-
 </script>
 
 </body>
