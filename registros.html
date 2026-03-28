@@ -104,12 +104,11 @@ async function carregarAlunos(){
             alunosMap[String(d.codigo)] = d.turma || "Sem turma";
         });
     });
-
 }
 
-carregarAlunos();
-
 let escolaId = localStorage.getItem("escolaId");
+
+    carregarAlunos();
     
 onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
     registros = [];
