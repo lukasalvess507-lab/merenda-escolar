@@ -146,6 +146,7 @@ async function processarCodigo(codigo){
     nome: aluno.nome,
     codigo: codigo,
     data: hoje
+    hora: new Date().toLocaleTimeString("pt-BR")
   });
 
   beep();
