@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard - S.C.A.E</title>
+<title>Painel</title>
 
 <style>
 body{
@@ -11,7 +11,6 @@ body{
     background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     color:white;
     text-align:center;
-    padding:20px;
 }
 
 .container{
@@ -20,25 +19,22 @@ body{
     padding:20px;
     border-radius:12px;
     max-width:350px;
-    margin:auto;
+    margin:40px auto;
 }
 
-.box{
-    background:#f2f2f2;
-    padding:15px;
-    border-radius:10px;
-    margin:10px 0;
+.total{
+    font-size:40px;
+    font-weight:bold;
 }
 
 button{
-    width:100%;
+    width:90%;
     padding:12px;
-    margin-top:10px;
+    margin-top:15px;
     background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
-    font-weight:bold;
 }
 </style>
 </head>
@@ -48,30 +44,22 @@ button{
 <h2>Painel Geral</h2>
 
 <div class="container">
-
-<div class="box">
-<h3>Total Hoje</h3>
-<h1 id="total">0</h1>
+    <div>Total Hoje</div>
+    <div class="total" id="total">0</div>
 </div>
 
-<div class="box" id="lista">
-Carregando...
-</div>
-
-<button onclick="voltar()">Voltar</button>
-
-</div>
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -79,33 +67,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const hoje = new Date().toISOString().split("T")[0];
+function hojeBrasil(){
+    return new Date().toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo'
+    });
+}
 
-const q = query(collection(db, "registros"), where("data", "==", hoje));
-
-onSnapshot(q, (snapshot) => {
+onSnapshot(collection(db, "registros"), (snapshot) => {
 
     let total = 0;
-    let html = "";
+    const hoje = hojeBrasil();
 
     snapshot.forEach(doc => {
         const d = doc.data();
 
-        // 🔥 CORREÇÃO DO UNDEFINED
-        const nome = d.nome ? d.nome : "Aluno não identificado";
-
-        html += nome + " - " + d.hora + "<br>";
-        total++;
+        if(d.data === hoje){
+            total++;
+        }
     });
 
     document.getElementById("total").innerText = total;
-    document.getElementById("lista").innerHTML = html || "Nenhum registro hoje";
 
 });
-
-window.voltar = function(){
-    window.location.href="index.html";
-}
 
 </script>
 
