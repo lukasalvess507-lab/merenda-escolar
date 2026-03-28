@@ -39,15 +39,10 @@ button{
     color:white;
     border:none;
     border-radius:10px;
-    font-size:16px;
-}
-
-button:hover{
-    background:#163b22;
 }
 </style>
 
-<!-- FIREBASE (VERSÃO CERTA PRO SEU SISTEMA) -->
+<!-- FIREBASE CERTO -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
@@ -90,7 +85,6 @@ function entrar(){
 
         const user = userCredential.user;
 
-        // 🔥 SALVA A ESCOLA (AGORA FUNCIONA DE VERDADE)
         localStorage.setItem("escolaId", user.uid);
         localStorage.setItem("escolaNome", email);
 
