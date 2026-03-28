@@ -26,7 +26,6 @@ body{
 .data{
     margin-top:15px;
     font-weight:bold;
-    font-size:16px;
 }
 
 .item{
@@ -89,7 +88,19 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
         const dados = docSnap.data();
 
-        const data = dados.data || "Sem data";
+        const dataOriginal = dados.data || "";
+
+        let data = "Sem data";
+
+        if(dataOriginal){
+
+            const partes = dataOriginal.split("-");
+            const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
+
+            dataObj.setDate(dataObj.getDate() - 1);
+
+            data = dataObj.toLocaleDateString('pt-BR');
+        }
 
         if(!registrosPorData[data]){
             registrosPorData[data] = [];
@@ -103,7 +114,6 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
     });
 
-    // ordenar datas (mais recente primeiro)
     const datasOrdenadas = Object.keys(registrosPorData).sort().reverse();
 
     datasOrdenadas.forEach(data => {
