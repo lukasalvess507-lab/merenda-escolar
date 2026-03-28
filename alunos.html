@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alunos - S.C.A.E</title>
 
 <style>
@@ -11,12 +12,6 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    animation: fadeIn 0.8s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
 }
 
 .container{
@@ -44,12 +39,6 @@ button{
     border:none;
     border-radius:8px;
     font-weight:bold;
-    cursor:pointer;
-    transition:0.2s;
-}
-
-button:active{
-    transform:scale(0.96);
 }
 </style>
 </head>
@@ -65,10 +54,44 @@ Carregando...
 
 <button onclick="voltar()">Voltar</button>
 
-<script>
-function voltar(){
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function carregarAlunos(){
+
+    const querySnapshot = await getDocs(collection(db, "alunos"));
+
+    let html = "";
+
+    querySnapshot.forEach(doc => {
+        const d = doc.data();
+        html += `<div class="aluno">${d.codigo} - ${d.nome}</div>`;
+    });
+
+    document.getElementById("lista").innerHTML = html || "Nenhum aluno cadastrado";
+
+}
+
+carregarAlunos();
+
+window.voltar = function(){
     window.location.href="index.html";
 }
+
 </script>
 
 </body>
