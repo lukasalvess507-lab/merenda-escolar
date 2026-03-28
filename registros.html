@@ -95,7 +95,19 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
-async function carregarAlunos(){
+function carregarAlunos(){
+    return new Promise((resolve) => {
+        onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
+            alunosMap = {};
+            snap.forEach(doc=>{
+                const d = doc.data();
+                alunosMap[d.codigo] = d.turma || "Sem turma";
+            });
+
+            resolve(); // 👉 só libera depois de carregar
+        });
+    });
+}
 
     onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
         alunosMap = {};
@@ -108,9 +120,32 @@ async function carregarAlunos(){
 
 let escolaId = localStorage.getItem("escolaId");
 
-    carregarAlunos();
-    
-onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+    carregarAlunos().then(() => {
+
+    onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+
+        registros = [];
+
+        const hoje = new Date().toLocaleDateString('pt-BR');
+
+        snapshot.forEach(doc => {
+            const d = doc.data();
+
+            if(d.data === hoje){
+                registros.push({
+                    nome: d.nome,
+                    codigo: d.codigo,
+                    turma: alunosMap[d.codigo] || "Sem turma"
+                });
+            }
+        });
+
+        montarFiltro();
+        renderizar();
+
+    });
+
+});
     registros = [];
 
     const hoje = new Date().toLocaleDateString('pt-BR');
