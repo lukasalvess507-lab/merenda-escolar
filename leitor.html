@@ -14,7 +14,6 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    transition: background 0.3s;
 }
 
 .container{
@@ -28,12 +27,15 @@ body{
 
 #reader{
     width:100%;
+    border:4px solid transparent;
+    border-radius:10px;
 }
 
 #msg{
-    margin-top:10px;
-    font-size:20px;
+    margin-top:15px;
+    font-size:22px;
     font-weight:bold;
+    min-height:30px;
 }
 
 button{
@@ -60,7 +62,7 @@ button{
 
 <p id="msg">Aguardando leitura...</p>
 
-<button onclick="voltar()">Voltar</button>
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 </div>
 
@@ -82,17 +84,25 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const hoje = new Date().toISOString().split("T")[0];
+const msg = document.getElementById("msg");
+const readerDiv = document.getElementById("reader");
+
+let bloqueado = false; // controla leitura repetida
 
 function beep(){
     const audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
     audio.play();
 }
 
-function flash(cor){
-    document.body.style.background = cor;
+function feedback(cor, texto){
+    readerDiv.style.border = "4px solid " + cor;
+    msg.innerText = texto;
+
     setTimeout(() => {
-        document.body.style.background = "linear-gradient(135deg, #1e3a5f, #2a4d69)";
-    }, 500);
+        readerDiv.style.border = "4px solid transparent";
+        msg.innerText = "Aguardando leitura...";
+        bloqueado = false;
+    }, 3000);
 }
 
 const html5QrCode = new Html5Qrcode("reader");
@@ -102,14 +112,16 @@ html5QrCode.start(
     { fps: 10, qrbox: 250 },
     async (codigo) => {
 
-        document.getElementById("msg").innerText = "Lendo...";
+        if(bloqueado) return;
+        bloqueado = true;
+
+        msg.innerText = "Lendo...";
 
         const alunoRef = doc(db, "alunos", codigo);
         const alunoSnap = await getDoc(alunoRef);
 
         if (!alunoSnap.exists()) {
-            document.getElementById("msg").innerText = "Aluno não encontrado";
-            flash("orange");
+            feedback("orange", "Aluno não encontrado");
             return;
         }
 
@@ -119,8 +131,7 @@ html5QrCode.start(
         const registroSnap = await getDoc(registroRef);
 
         if (registroSnap.exists()) {
-            document.getElementById("msg").innerText = "JA REGISTRADO";
-            flash("red");
+            feedback("red", "ALUNO JÁ REGISTRADO");
             return;
         }
 
@@ -135,15 +146,10 @@ html5QrCode.start(
 
         beep();
 
-        document.getElementById("msg").innerText = nome.toUpperCase();
-        flash("green");
+        feedback("green", nome.toUpperCase());
 
     }
 );
-
-window.voltar = function(){
-    window.location.href="index.html";
-}
 
 </script>
 
