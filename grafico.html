@@ -2,45 +2,48 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Gráfico de Frequência</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gráfico - S.C.A.E</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{
     font-family: Arial;
-    background: #2f3a73;
-    color: white;
-    text-align: center;
-    padding: 20px;
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
+    color:white;
+    text-align:center;
+    padding:20px;
 }
 
 .container{
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
-    max-width: 500px;
-    margin: auto;
-}
-
-canvas{
-    margin-top: 20px;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    max-width:350px;
+    margin:auto;
 }
 
 button{
-    margin-top: 15px;
-    padding: 10px;
-    width: 100%;
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    background:#1f4d2e;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Frequência da Merenda</h2>
+<h2>S.C.A.E</h2>
+<p>Frequência da Merenda</p>
 
 <div class="container">
-    <canvas id="grafico"></canvas>
+<canvas id="grafico"></canvas>
 </div>
 
 <button onclick="voltar()">Voltar</button>
@@ -49,7 +52,6 @@ button{
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -62,66 +64,39 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-onAuthStateChanged(auth, async (user) => {
+async function carregarGrafico(){
 
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+    const snapshot = await getDocs(collection(db, "registros"));
 
-    const snapshot = await getDocs(collection(db, "escolas", user.uid, "registros"));
+    const dados = {};
 
-    const dadosPorDia = {};
-
-    snapshot.forEach((doc) => {
-        const dado = doc.data();
-
-        if(!dadosPorDia[dado.data]){
-            dadosPorDia[dado.data] = 0;
-        }
-
-        dadosPorDia[dado.data]++;
+    snapshot.forEach(doc => {
+        const d = doc.data();
+        dados[d.data] = (dados[d.data] || 0) + 1;
     });
 
-    const labels = Object.keys(dadosPorDia);
-    const valores = Object.values(dadosPorDia);
+    const labels = Object.keys(dados);
+    const valores = Object.values(dados);
 
     new Chart(document.getElementById("grafico"), {
-        type: 'bar',
+        type: "bar",
         data: {
             labels: labels,
             datasets: [{
-                label: 'Alunos por dia',
+                label: "Alunos por dia",
                 data: valores,
-                backgroundColor: '#4CAF50',
-                borderRadius: 10
+                backgroundColor: "#1f4d2e"
             }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    labels: {
-                        color: 'black'
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: 'black' }
-                },
-                y: {
-                    ticks: { color: 'black' }
-                }
-            }
         }
     });
 
-});
+}
+
+carregarGrafico();
 
 window.voltar = function(){
-    window.location.href = "index.html";
+    window.location.href="index.html";
 }
 
 </script>
