@@ -47,18 +47,18 @@ button:hover{
 }
 </style>
 
-<!-- Firebase -->
+<!-- FIREBASE (VERSÃO CERTA PRO SEU SISTEMA) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_DOMINIO",
-    projectId: "SEU_PROJECT_ID",
-    storageBucket: "SEU_BUCKET",
-    messagingSenderId: "SEU_ID",
-    appId: "SEU_APP_ID"
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SIUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.appspot.com",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -90,7 +90,7 @@ function entrar(){
 
         const user = userCredential.user;
 
-        // 🔥 SALVA A ESCOLA CORRETAMENTE
+        // 🔥 SALVA A ESCOLA (AGORA FUNCIONA DE VERDADE)
         localStorage.setItem("escolaId", user.uid);
         localStorage.setItem("escolaNome", email);
 
