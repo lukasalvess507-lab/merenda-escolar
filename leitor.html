@@ -3,73 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leitor QR</title>
+<title>Leitor QR Code</title>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body{
-    font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
-    text-align:center;
+  font-family: Arial;
+  background: linear-gradient(135deg, #1e3a5f, #2a4d69);
+  color: white;
+  text-align: center;
+  padding: 20px;
 }
 
 #reader{
-    width:300px;
-    margin:auto;
+  width: 100%;
+  max-width: 300px;
+  margin: auto;
 }
 
-#msg{
-    margin-top:15px;
-    font-size:18px;
+#status{
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.barra-container{
+  width: 100%;
+  max-width: 300px;
+  height: 10px;
+  background: #ccc;
+  margin: 10px auto;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
 #barra{
-    height:10px;
-    width:100%;
-    margin-top:10px;
-}
-
-.verde{
-    background:green;
-}
-
-.vermelho{
-    background:red;
+  height: 100%;
+  width: 0%;
+  transition: 0.3s;
 }
 
 button{
-    margin-top:15px;
-    padding:12px;
-    width:90%;
-    background:#1f4d2e;
-    color:white;
-    border:none;
-    border-radius:8px;
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  margin-top: 20px;
+  background: #1f4d2e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>S.C.A.E</h2>
-<p>Leitor de QR Code</p>
+<h2>Leitor QR Code</h2>
 
 <div id="reader"></div>
 
-<div id="msg">Aguardando leitura...</div>
-<div id="barra"></div>
+<div id="status">Aguardando leitura...</div>
+
+<div class="barra-container">
+  <div id="barra"></div>
+</div>
 
 <button onclick="window.location.href='index.html'">Voltar</button>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  apiKey: "AIzaSyCGA7zSIJUjwt4Auw9-R2V-SIUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.appspot.com",
@@ -80,115 +88,107 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let ultimoCodigo = "";
+let escolaId = localStorage.getItem("escolaId");
+
 let bloqueado = false;
+let ultimoCodigo = "";
 
-function bip(){
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = ctx.createOscillator();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(800, ctx.currentTime);
-    oscillator.connect(ctx.destination);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.1);
+const status = document.getElementById("status");
+const barra = document.getElementById("barra");
+
+function beep(){
+  const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+  audio.play();
 }
 
-function hojeBrasil(){
-    const agora = new Date();
-    agora.setHours(agora.getHours() - 3);
-    return agora.toLocaleDateString('pt-BR');
+async function processarCodigo(codigo){
+
+  if(bloqueado || codigo === ultimoCodigo) return;
+
+  bloqueado = true;
+  ultimoCodigo = codigo;
+
+  const hoje = new Date().toLocaleDateString("pt-BR");
+
+  // verificar duplicado
+  const q = query(
+    collection(db, "escolas", escolaId, "registros"),
+    where("codigo", "==", codigo),
+    where("data", "==", hoje)
+  );
+
+  const snap = await getDocs(q);
+
+  if(!snap.empty){
+    mostrarErro("Aluno já registrado");
+    liberar();
+    return;
+  }
+
+  // buscar aluno
+  const alunosSnap = await getDocs(collection(db, "escolas", escolaId, "alunos"));
+  let aluno = null;
+
+  alunosSnap.forEach(doc => {
+    if(doc.data().codigo == codigo){
+      aluno = doc.data();
+    }
+  });
+
+  if(!aluno){
+    mostrarErro("Aluno não encontrado");
+    liberar();
+    return;
+  }
+
+  // salvar registro
+  await addDoc(collection(db, "escolas", escolaId, "registros"), {
+    nome: aluno.nome,
+    codigo: codigo,
+    data: hoje
+  });
+
+  beep();
+  mostrarSucesso("Leitura realizada");
+  liberar();
 }
 
-async function onScanSuccess(decodedText){
-
-    if(bloqueado) return;
-
-    bloqueado = true;
-
-    const codigoLido = decodedText.trim();
-
-    // evitar leitura repetida imediata
-    if(codigoLido === ultimoCodigo){
-        bloqueado = false;
-        return;
-    }
-
-    ultimoCodigo = codigoLido;
-
-    // 🔎 BUSCAR ALUNO PELO CÓDIGO (CORRETO)
-    const q = query(collection(db, "alunos"), where("codigo", "==", codigoLido));
-    const querySnapshot = await getDocs(q);
-
-    if(querySnapshot.empty){
-        document.getElementById("msg").innerText = "Aluno não encontrado";
-        mostrarBarra("vermelho");
-        setTimeout(liberar,2000);
-        return;
-    }
-
-    let aluno;
-    querySnapshot.forEach(doc => {
-        aluno = doc.data();
-    });
-
-    const hoje = hojeBrasil();
-
-    // verificar se já registrou hoje
-    const q2 = query(
-        collection(db, "registros"),
-        where("codigo", "==", codigoLido),
-        where("data", "==", hoje)
-    );
-
-    const registroHoje = await getDocs(q2);
-
-    if(!registroHoje.empty){
-        document.getElementById("msg").innerText = aluno.nome + " já registrado hoje";
-        mostrarBarra("vermelho");
-        bip();
-        setTimeout(liberar,3000);
-        return;
-    }
-
-    // salvar registro
-    await addDoc(collection(db, "registros"), {
-        nome: aluno.nome,
-        codigo: codigoLido,
-        data: hoje,
-        hora: new Date().toLocaleTimeString()
-    });
-
-    document.getElementById("msg").innerText = aluno.nome + " registrado!";
-    mostrarBarra("verde");
-    bip();
-
-    setTimeout(liberar,3000);
-
+function mostrarSucesso(msg){
+  status.innerText = msg;
+  barra.style.background = "green";
+  barra.style.width = "100%";
 }
 
-function mostrarBarra(cor){
-    const barra = document.getElementById("barra");
-    barra.className = "";
-    barra.classList.add(cor);
+function mostrarErro(msg){
+  status.innerText = msg;
+  barra.style.background = "red";
+  barra.style.width = "100%";
 }
 
 function liberar(){
-    document.getElementById("msg").innerText = "Aguardando leitura...";
-    document.getElementById("barra").className = "";
+  setTimeout(()=>{
+    status.innerText = "Aguardando leitura...";
+    barra.style.width = "0%";
     bloqueado = false;
+  },3000);
 }
 
+// iniciar câmera traseira
 const html5QrCode = new Html5Qrcode("reader");
 
-html5QrCode.start(
-    { facingMode: "environment" },
-    {
-        fps: 10,
-        qrbox: 250
-    },
-    onScanSuccess
-);
+Html5Qrcode.getCameras().then(devices => {
+  if(devices && devices.length){
+    const camera = devices.find(d => d.label.toLowerCase().includes("back")) || devices[0];
 
+    html5QrCode.start(
+      camera.id,
+      { fps: 10, qrbox: 250 },
+      (decodedText) => {
+        processarCodigo(decodedText);
+      }
+    );
+  }
+});
 </script>
 
 </body>
