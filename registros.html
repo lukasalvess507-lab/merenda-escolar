@@ -3,7 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "SUA_KEY",
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
   storageBucket: "merenda-escolar-2.appspot.com",
@@ -21,7 +21,7 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
-let escolaId = localStorage.getItem("escolaId");
+const escolaId = localStorage.getItem("escolaId");
 
 function carregarAlunos(){
     onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
@@ -35,11 +35,11 @@ function carregarAlunos(){
 }
 
 function carregarRegistros(){
-    onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+    onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot)=>{
         registros = [];
-        const hoje = new Date().toLocaleDateString('pt-BR');
+        const hoje = new Date().toLocaleDateString("pt-BR");
 
-        snapshot.forEach(doc => {
+        snapshot.forEach(doc=>{
             const d = doc.data();
             if(d.data === hoje){
                 registros.push({
@@ -57,6 +57,7 @@ function carregarRegistros(){
 
 function montarFiltro(){
     const turmas = new Set();
+
     registros.forEach(r=>{
         turmas.add(r.turma);
     });
@@ -73,7 +74,7 @@ function renderizar(){
     const turmaSelecionada = filtro.value;
     let contador = 0;
 
-    registros.forEach(r => {
+    registros.forEach(r=>{
         if(turmaSelecionada !== "todas" && r.turma !== turmaSelecionada){
             return;
         }
@@ -82,12 +83,7 @@ function renderizar(){
 
         const div = document.createElement("div");
         div.className = "item";
-
-        div.innerHTML = `
-            ${r.nome}<br>
-            <small>${r.turma}</small>
-        `;
-
+        div.innerHTML = `${r.nome}<br><small>${r.turma}</small>`;
         lista.appendChild(div);
     });
 
