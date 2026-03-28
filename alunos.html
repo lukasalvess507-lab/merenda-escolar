@@ -23,19 +23,33 @@ body{
 
 .card{
     background:#eee;
-    padding:10px;
+    padding:12px;
     margin:10px 0;
     border-radius:8px;
+    text-align:left;
 }
 
 button{
     width:100%;
     padding:12px;
     margin-top:10px;
-    background:#1f4d2e;
-    color:white;
     border:none;
     border-radius:8px;
+    color:white;
+}
+
+.btn-voltar{
+    background:#1f4d2e;
+}
+
+.btn-editar{
+    background:#007bff;
+    margin-top:8px;
+}
+
+.btn-excluir{
+    background:#dc3545;
+    margin-top:5px;
 }
 
 select{
@@ -58,14 +72,14 @@ select{
 
 <div id="lista"></div>
 
-<button onclick="voltar()">Voltar</button>
+<button class="btn-voltar" onclick="voltar()">Voltar</button>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -91,13 +105,16 @@ async function carregar(){
 
     todosAlunos = [];
 
-    snapshot.forEach(doc => {
-        const aluno = doc.data();
+    snapshot.forEach(docSnap => {
+        const aluno = docSnap.data();
+        aluno.id = docSnap.id;
+
         todosAlunos.push(aluno);
         turmasSet.add(aluno.turma);
     });
 
     const select = document.getElementById("filtroTurma");
+    select.innerHTML = '<option value="todas">Todas as turmas</option>';
 
     turmasSet.forEach(turma => {
         const option = document.createElement("option");
@@ -115,11 +132,15 @@ function mostrar(lista){
     div.innerHTML = "";
 
     lista.forEach(aluno => {
+
         div.innerHTML += `
         <div class="card">
             <b>Código:</b> ${aluno.codigo}<br>
             <b>Nome:</b> ${aluno.nome}<br>
             <b>Turma:</b> ${aluno.turma}
+
+            <button class="btn-editar" onclick="editar('${aluno.id}','${aluno.nome}','${aluno.turma}')">Editar</button>
+            <button class="btn-excluir" onclick="excluir('${aluno.id}')">Excluir</button>
         </div>
         `;
     });
@@ -135,6 +156,34 @@ window.filtrar = function(){
         const filtrados = todosAlunos.filter(a => a.turma === turma);
         mostrar(filtrados);
     }
+}
+
+window.editar = async function(id, nomeAtual, turmaAtual){
+
+    const novoNome = prompt("Editar nome:", nomeAtual);
+    const novaTurma = prompt("Editar turma:", turmaAtual);
+
+    if(!novoNome || !novaTurma) return;
+
+    await updateDoc(doc(db, "escolas", escolaId, "alunos", id), {
+        nome: novoNome,
+        turma: novaTurma
+    });
+
+    alert("Aluno atualizado");
+    carregar();
+}
+
+window.excluir = async function(id){
+
+    const confirmar = confirm("Deseja excluir este aluno?");
+
+    if(!confirmar) return;
+
+    await deleteDoc(doc(db, "escolas", escolaId, "alunos", id));
+
+    alert("Aluno excluído");
+    carregar();
 }
 
 window.voltar = function(){
