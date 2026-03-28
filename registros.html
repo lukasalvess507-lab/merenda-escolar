@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resumo do Dia</title>
+<title>Relatório</title>
 
 <style>
 body{
@@ -24,9 +24,18 @@ body{
 }
 
 .item{
-    margin:10px 0;
     padding:10px;
     border-bottom:1px solid #ccc;
+}
+
+.nome{
+    font-weight:bold;
+    font-size:16px;
+}
+
+.total{
+    margin-top:15px;
+    font-weight:bold;
 }
 
 button{
@@ -44,14 +53,13 @@ button{
 
 <body>
 
-<h2>S.C.A.E</h2>
-<p>Resumo do Dia</p>
+<h2>Relatório</h2>
 
 <div class="container">
 
-<h3 id="total">Total: 0</h3>
-
 <div id="lista"></div>
+
+<div id="total" class="total">Total de alunos: 0</div>
 
 <button onclick="window.location.href='index.html'">Voltar</button>
 
@@ -74,19 +82,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const hoje = new Date().toISOString().split("T")[0];
-
 const lista = document.getElementById("lista");
 const total = document.getElementById("total");
+
+const hoje = new Date().toISOString().split("T")[0];
 
 onSnapshot(collection(db, "registros"), (snapshot) => {
 
     lista.innerHTML = "";
     let contador = 0;
 
-    snapshot.forEach(doc => {
+    snapshot.forEach(docSnap => {
 
-        const dados = doc.data();
+        const dados = docSnap.data();
 
         if(dados.data === hoje){
 
@@ -94,9 +102,11 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
             const div = document.createElement("div");
             div.className = "item";
+
             div.innerHTML = `
-                <strong>${dados.nome}</strong><br>
-                ${dados.hora}
+                <div class="nome">${dados.nome || "Sem nome"}</div>
+                Código: ${dados.codigo || "-"}<br>
+                Hora: ${dados.hora || "-"}
             `;
 
             lista.appendChild(div);
@@ -104,7 +114,7 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
     });
 
-    total.innerText = "Total: " + contador;
+    total.innerText = "Total de alunos: " + contador;
 
 });
 
