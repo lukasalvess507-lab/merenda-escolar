@@ -63,20 +63,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 FUNÇÃO QUE CORRIGE QUALQUER DATA
+// 🔥 Corrigir formato de data
 function formatarData(data){
-    if(!data) return "Inválido";
+    if(!data) return null;
 
-    // se já está no formato BR
     if(data.includes("/")) return data;
 
-    // se está formato americano
     if(data.includes("-")){
-        const partes = data.split("-");
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const p = data.split("-");
+        return `${p[2]}/${p[1]}/${p[0]}`;
     }
 
-    return data;
+    return null;
 }
 
 const ctx = document.getElementById('grafico');
@@ -96,17 +94,27 @@ const chart = new Chart(ctx, {
 onSnapshot(collection(db, "registros"), (snapshot) => {
 
     const contagem = {};
+    const controleUnico = new Set();
 
     snapshot.forEach(doc => {
         const d = doc.data();
 
-        const dataCorrigida = formatarData(d.data);
+        const data = formatarData(d.data);
+        const codigo = d.codigo;
 
-        if(!contagem[dataCorrigida]){
-            contagem[dataCorrigida] = 0;
+        if(!data || !codigo) return;
+
+        // 🔥 evita duplicação
+        const chave = data + "_" + codigo;
+
+        if(controleUnico.has(chave)) return;
+        controleUnico.add(chave);
+
+        if(!contagem[data]){
+            contagem[data] = 0;
         }
 
-        contagem[dataCorrigida]++;
+        contagem[data]++;
     });
 
     const datas = Object.keys(contagem).sort((a,b)=>{
