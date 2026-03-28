@@ -76,10 +76,15 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
         const d = doc.data();
         const dataOriginal = d.data;
 
-        if(!dataOriginal) return;
+        if(!dataOriginal || !dataOriginal.includes("-")) return;
 
         const partes = dataOriginal.split("-");
+
+        if(partes.length !== 3) return;
+
         const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
+
+        if(isNaN(dataObj)) return;
 
         dataObj.setDate(dataObj.getDate() - 1);
 
