@@ -27,7 +27,8 @@ const escolaId = "escola_antonio_barros";
 let registros = [];
 let alunosMap = {};
 
-let grafico;
+let graficoDia;
+let graficoTurma;
 
 onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
   alunosMap = {};
@@ -59,42 +60,59 @@ function gerarDashboard(){
 
   registros.forEach(r => {
 
-    // por dia
     porDia[r.data] = (porDia[r.data] || 0) + 1;
-
-    // por turma
     porTurma[r.turma] = (porTurma[r.turma] || 0) + 1;
+
   });
 
-  const labels = Object.keys(porDia);
-  const dados = Object.values(porDia);
+  // ===== GRÁFICO POR DIA =====
+  const ctx1 = document.getElementById("graficoDia");
 
-  const ctx = document.getElementById("grafico");
-
-  if(grafico){
-    grafico.destroy();
+  if(graficoDia){
+    graficoDia.destroy();
   }
 
-  grafico = new Chart(ctx, {
+  graficoDia = new Chart(ctx1, {
     type: "bar",
     data: {
-      labels: labels,
+      labels: Object.keys(porDia),
       datasets: [{
         label: "Alunos por dia",
-        data: dados
+        data: Object.values(porDia)
       }]
     }
   });
 
-  // listar turmas
-  const listaTurmas = document.getElementById("turmas");
-  listaTurmas.innerHTML = "";
+  // ===== GRÁFICO POR TURMA =====
+  const ctx2 = document.getElementById("graficoTurma");
 
-  Object.keys(porTurma).forEach(t => {
+  if(graficoTurma){
+    graficoTurma.destroy();
+  }
+
+  graficoTurma = new Chart(ctx2, {
+    type: "pie",
+    data: {
+      labels: Object.keys(porTurma),
+      datasets: [{
+        label: "Alunos por turma",
+        data: Object.values(porTurma)
+      }]
+    }
+  });
+
+  // ===== RANKING =====
+  const ranking = document.getElementById("ranking");
+  ranking.innerHTML = "";
+
+  const ordenado = Object.entries(porTurma)
+    .sort((a, b) => b[1] - a[1]);
+
+  ordenado.forEach(([turma, qtd]) => {
     const div = document.createElement("div");
     div.className = "item";
-    div.innerText = t + ": " + porTurma[t] + (porTurma[t] == 1 ? " aluno" : " alunos");
-    listaTurmas.appendChild(div);
+    div.innerText = turma + ": " + qtd + (qtd == 1 ? " aluno" : " alunos");
+    ranking.appendChild(div);
   });
 
 }
@@ -146,10 +164,14 @@ button{
 
 <div class="box">
 
-  <canvas id="grafico"></canvas>
+  <h3>Alunos por dia</h3>
+  <canvas id="graficoDia"></canvas>
 
   <h3>Alunos por turma</h3>
-  <div id="turmas"></div>
+  <canvas id="graficoTurma"></canvas>
+
+  <h3>Ranking de turmas</h3>
+  <div id="ranking"></div>
 
   <button onclick="history.back()">Voltar</button>
 
