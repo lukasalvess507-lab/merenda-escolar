@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastrar Aluno</title>
+<title>Cadastro</title>
 
 <style>
 body{
@@ -24,10 +24,10 @@ body{
 }
 
 input{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:6px;
+    width:90%;
+    padding:10px;
+    margin:8px;
+    border-radius:8px;
     border:1px solid #ccc;
 }
 
@@ -39,38 +39,37 @@ button{
     color:white;
     border:none;
     border-radius:8px;
-    font-weight:bold;
 }
 
 #msg{
     margin-top:10px;
-    font-weight:bold;
+    color:green;
 }
 </style>
 </head>
 
 <body>
 
-<h2>S.C.A.E</h2>
-<p>Cadastrar Aluno</p>
+<h2>Cadastrar Aluno</h2>
 
 <div class="container">
 
-<input id="codigo" placeholder="Código do aluno">
+<input id="codigo" placeholder="Código">
 <input id="nome" placeholder="Nome do aluno">
+<input id="turma" placeholder="Turma (ex: 9º A)">
 
-<button id="btnSalvar">Salvar</button>
+<button onclick="salvar()">Salvar</button>
 
 <p id="msg"></p>
 
-<button onclick="window.location.href='index.html'">Voltar</button>
-
 </div>
+
+<button onclick="window.location.href='index.html'">Voltar</button>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -84,44 +83,34 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const msg = document.getElementById("msg");
+window.salvar = async function(){
 
-document.getElementById("btnSalvar").addEventListener("click", async () => {
+    const codigo = document.getElementById("codigo").value;
+    const nome = document.getElementById("nome").value;
+    const turma = document.getElementById("turma").value;
 
-    const codigo = document.getElementById("codigo").value.trim();
-    const nome = document.getElementById("nome").value.trim();
-
-    msg.innerText = ""; // limpa antes
-
-    if(!codigo || !nome){
-        msg.innerText = "Preencha todos os campos";
+    if(!codigo || !nome || !turma){
+        alert("Preencha todos os campos");
         return;
     }
 
-    try {
+    await addDoc(collection(db, "alunos"), {
+        codigo: codigo,
+        nome: nome,
+        turma: turma
+    });
 
-        await setDoc(doc(db, "alunos", codigo), {
-            codigo: codigo,
-            nome: nome
-        });
+    document.getElementById("msg").innerText = "Aluno cadastrado com sucesso";
 
-        msg.innerText = "Aluno cadastrado com sucesso";
+    setTimeout(()=>{
+        document.getElementById("msg").innerText = "";
+    },2000);
 
-        // limpa campos
-        document.getElementById("codigo").value = "";
-        document.getElementById("nome").value = "";
+    document.getElementById("codigo").value = "";
+    document.getElementById("nome").value = "";
+    document.getElementById("turma").value = "";
 
-        // REMOVE mensagem depois de 2 segundos
-        setTimeout(() => {
-            msg.innerText = "";
-        }, 2000);
-
-    } catch(e){
-        msg.innerText = "Erro ao salvar";
-        console.error(e);
-    }
-
-});
+}
 
 </script>
 
