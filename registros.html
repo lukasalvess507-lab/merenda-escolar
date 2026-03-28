@@ -1,86 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resumo do Dia</title>
-
-<style>
-body{
-    font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
-    text-align:center;
-    padding:20px;
-}
-
-.container{
-    background:white;
-    color:black;
-    padding:20px;
-    border-radius:12px;
-    max-width:350px;
-    margin:auto;
-}
-
-.item{
-    padding:8px;
-    border-bottom:1px solid #ccc;
-}
-
-.total{
-    font-weight:bold;
-    margin-bottom:10px;
-}
-
-select{
-    width:100%;
-    padding:10px;
-    margin-bottom:10px;
-    border-radius:8px;
-}
-
-button{
-    width:100%;
-    padding:12px;
-    margin-top:15px;
-    background:#1f4d2e;
-    color:white;
-    border:none;
-    border-radius:8px;
-}
-</style>
-</head>
-
-<body>
-
-<h2>S.C.A.E</h2>
-<p>Resumo do Dia</p>
-
-<div class="container">
-
-<select id="filtroTurma">
-    <option value="todas">Todas as turmas</option>
-</select>
-
-<div class="total" id="total"></div>
-
-<div id="lista"></div>
-
-</div>
-
-<button onclick="window.location.href='index.html'">Voltar</button>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  apiKey: "SUA_KEY",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -95,42 +21,26 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
+let escolaId = localStorage.getItem("escolaId");
+
 function carregarAlunos(){
-    return new Promise((resolve) => {
-        onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
-            alunosMap = {};
-            snap.forEach(doc=>{
-                const d = doc.data();
-                alunosMap[d.codigo] = d.turma || "Sem turma";
-            });
-
-            resolve(); // 👉 só libera depois de carregar
-        });
-    });
-}
-
     onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
         alunosMap = {};
         snap.forEach(doc=>{
             const d = doc.data();
-            alunosMap[String(d.codigo)] = d.turma || "Sem turma";
+            alunosMap[d.codigo] = d.turma || "Sem turma";
         });
+        renderizar();
     });
 }
 
-let escolaId = localStorage.getItem("escolaId");
-
-    carregarAlunos().then(() => {
-
+function carregarRegistros(){
     onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
-
         registros = [];
-
         const hoje = new Date().toLocaleDateString('pt-BR');
 
         snapshot.forEach(doc => {
             const d = doc.data();
-
             if(d.data === hoje){
                 registros.push({
                     nome: d.nome,
@@ -142,39 +52,11 @@ let escolaId = localStorage.getItem("escolaId");
 
         montarFiltro();
         renderizar();
-
     });
-
-});
-    registros = [];
-
-    const hoje = new Date().toLocaleDateString('pt-BR');
-
-    snapshot.forEach(doc => {
-
-        const d = doc.data();
-
-        if(d.data === hoje){
-
-            registros.push({
-                nome: d.nome,
-                codigo: d.codigo,
-                turma: alunosMap[String(d.codigo)] || "Sem turma"
-            });
-
-        }
-
-    });
-
-    montarFiltro();
-    renderizar();
-
-});
+}
 
 function montarFiltro(){
-
     const turmas = new Set();
-
     registros.forEach(r=>{
         turmas.add(r.turma);
     });
@@ -184,21 +66,14 @@ function montarFiltro(){
     turmas.forEach(t=>{
         filtro.innerHTML += `<option value="${t}">${t}</option>`;
     });
-
 }
 
-filtro.addEventListener("change", renderizar);
-
 function renderizar(){
-
     lista.innerHTML = "";
-
     const turmaSelecionada = filtro.value;
-
     let contador = 0;
 
     registros.forEach(r => {
-
         if(turmaSelecionada !== "todas" && r.turma !== turmaSelecionada){
             return;
         }
@@ -214,14 +89,13 @@ function renderizar(){
         `;
 
         lista.appendChild(div);
-
     });
 
     total.innerText = "Total: " + contador + " alunos";
-
 }
 
-</script>
+filtro.addEventListener("change", renderizar);
 
-</body>
-</html>
+carregarAlunos();
+carregarRegistros();
+</script>
