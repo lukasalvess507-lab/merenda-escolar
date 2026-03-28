@@ -3,66 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alunos</title>
+
+<title>Ver Alunos</title>
 
 <style>
 body{
     font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
+    background:#f5f5f5;
     text-align:center;
-    padding:20px;
 }
 
 .container{
     background:white;
-    color:black;
     padding:20px;
-    border-radius:12px;
-    max-width:350px;
-    margin:auto;
+    border-radius:10px;
+    max-width:400px;
+    margin:50px auto;
 }
 
-.item{
+.aluno{
+    background:#e9e9e9;
+    margin:10px;
     padding:10px;
-    border-bottom:1px solid #ccc;
-}
-
-.nome{
-    font-weight:bold;
-}
-
-.botoes{
-    margin-top:5px;
+    border-radius:8px;
+    text-align:left;
 }
 
 button{
-    padding:8px;
-    margin:3px;
-    border:none;
-    border-radius:6px;
-    color:white;
-}
-
-.editar{
-    background:#2f7a4f;
-}
-
-.excluir{
-    background:#c0392b;
-}
-
-.voltar{
-    width:100%;
+    width:95%;
     padding:12px;
-    margin-top:15px;
+    margin-top:10px;
     background:#1f4d2e;
-}
-
-select{
-    width:100%;
-    padding:10px;
-    margin-bottom:10px;
+    color:white;
+    border:none;
     border-radius:8px;
 }
 </style>
@@ -70,31 +43,26 @@ select{
 
 <body>
 
-<h2>S.C.A.E</h2>
-<p>Lista de Alunos</p>
-
 <div class="container">
 
-<select id="filtroTurma">
-    <option value="todas">Todas as turmas</option>
-</select>
+<h3>Lista de Alunos</h3>
 
 <div id="lista"></div>
 
-</div>
+<button onclick="voltar()">Voltar</button>
 
-<button class="voltar" onclick="window.location.href='index.html'">Voltar</button>
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -102,102 +70,40 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const lista = document.getElementById("lista");
-const filtro = document.getElementById("filtroTurma");
+const escolaId = "escola_antonio_barros";
 
-let todosAlunos = [];
+async function carregarAlunos(){
 
-onSnapshot(collection(db, "alunos"), (snapshot) => {
+    const lista = document.getElementById("lista");
+    lista.innerHTML = "Carregando...";
 
-    todosAlunos = [];
-    const turmas = new Set();
-
-    snapshot.forEach(docSnap => {
-
-        const dados = docSnap.data();
-        const id = docSnap.id;
-
-        const turma = dados.turma || "Sem turma";
-
-        todosAlunos.push({
-            id,
-            nome: dados.nome,
-            codigo: dados.codigo,
-            turma: turma
-        });
-
-        turmas.add(turma);
-    });
-
-    // montar filtro
-    filtro.innerHTML = '<option value="todas">Todas as turmas</option>';
-
-    turmas.forEach(t => {
-        filtro.innerHTML += `<option value="${t}">${t}</option>`;
-    });
-
-    renderizar();
-
-});
-
-// filtrar ao mudar
-filtro.addEventListener("change", renderizar);
-
-function renderizar(){
+    const querySnapshot = await getDocs(
+        collection(db, "escolas", escolaId, "alunos")
+    );
 
     lista.innerHTML = "";
 
-    const turmaSelecionada = filtro.value;
+    querySnapshot.forEach((doc) => {
+        const aluno = doc.data();
 
-    todosAlunos.forEach(aluno => {
-
-        if(turmaSelecionada !== "todas" && aluno.turma !== turmaSelecionada){
-            return;
-        }
-
-        const div = document.createElement("div");
-        div.className = "item";
-
-        div.innerHTML = `
-            <div class="nome">${aluno.nome}</div>
-            Código: ${aluno.codigo}<br>
-            Turma: ${aluno.turma}
-            <div class="botoes">
-                <button class="editar" onclick="editar('${aluno.id}', '${aluno.nome}', '${aluno.codigo}', '${aluno.turma}')">Editar</button>
-                <button class="excluir" onclick="excluir('${aluno.id}')">Excluir</button>
+        lista.innerHTML += `
+            <div class="aluno">
+                <b>Código:</b> ${aluno.codigo} <br>
+                <b>Nome:</b> ${aluno.nome} <br>
+                <b>Turma:</b> ${aluno.turma}
             </div>
         `;
-
-        lista.appendChild(div);
-
     });
 
+    if(querySnapshot.empty){
+        lista.innerHTML = "Nenhum aluno encontrado";
+    }
 }
 
-window.excluir = async function(id){
+carregarAlunos();
 
-    if(confirm("Deseja excluir este aluno?")){
-        await deleteDoc(doc(db, "alunos", id));
-    }
-
-}
-
-window.editar = async function(id, nomeAtual, codigoAtual, turmaAtual){
-
-    const novoNome = prompt("Editar nome:", nomeAtual);
-    const novoCodigo = prompt("Editar código:", codigoAtual);
-    const novaTurma = prompt("Editar turma:", turmaAtual);
-
-    if(novoNome && novoCodigo && novaTurma){
-
-        await updateDoc(doc(db, "alunos", id), {
-            nome: novoNome,
-            codigo: novoCodigo,
-            turma: novaTurma
-        });
-
-    }
-
+window.voltar = function(){
+    window.location.href = "index.html";
 }
 
 </script>
