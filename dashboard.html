@@ -93,7 +93,7 @@ function gerarDashboard(){
   Object.keys(porTurma).forEach(t => {
     const div = document.createElement("div");
     div.className = "item";
-    div.innerText = t + ": " + porTurma[t] + " alunos";
+    div.innerText = t + ": " + porTurma[t] + (porTurma[t] == 1 ? " aluno" : " alunos");
     listaTurmas.appendChild(div);
   });
 
