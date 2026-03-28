@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gerar QR Code</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
 <style>
 body{
     font-family: Arial;
@@ -26,10 +24,10 @@ body{
 }
 
 input{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:6px;
+    width:90%;
+    padding:10px;
+    margin:10px;
+    border-radius:8px;
     border:1px solid #ccc;
 }
 
@@ -41,16 +39,12 @@ button{
     color:white;
     border:none;
     border-radius:8px;
-    font-weight:bold;
 }
 
-#qrcode{
-    margin-top:20px;
+canvas{
+    margin-top:15px;
 }
 
-#btnDownload{
-    display:none;
-}
 </style>
 </head>
 
@@ -63,52 +57,70 @@ button{
 
 <input id="codigo" placeholder="Digite o código do aluno">
 
-<button onclick="gerarQR()">Gerar QR Code</button>
+<button onclick="gerar()">Gerar QR Code</button>
 
-<div id="qrcode"></div>
+<canvas id="canvas"></canvas>
 
-<button id="btnDownload" onclick="baixarQR()">Baixar QR Code</button>
-
-<button onclick="window.location.href='index.html'">Voltar</button>
+<button onclick="baixar()">Baixar QR Code</button>
 
 </div>
 
+<button onclick="window.location.href='index.html'">Voltar</button>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
 <script>
 
-let canvasQR = null;
+let canvas = document.getElementById("canvas");
+let ctx = canvas.getContext("2d");
 
-function gerarQR(){
+function gerar(){
 
-    const codigo = document.getElementById("codigo").value.trim();
+    const codigo = document.getElementById("codigo").value;
 
     if(!codigo){
-        alert("Digite um código");
+        alert("Digite o código");
         return;
     }
 
-    const qrcodeDiv = document.getElementById("qrcode");
-    qrcodeDiv.innerHTML = "";
+    // gerar QR base
+    QRCode.toCanvas(canvas, codigo, {
+        width: 250,
+        margin: 2,
+        errorCorrectionLevel: 'H' // ALTA correção (IMPORTANTE)
+    }, function (error) {
 
-    QRCode.toCanvas(codigo, { width: 200 }, function (error, canvas) {
         if(error) return console.error(error);
 
-        qrcodeDiv.appendChild(canvas);
-        canvasQR = canvas;
+        // desenhar código no centro
+        const tamanho = 250;
 
-        // MOSTRA botão baixar
-        document.getElementById("btnDownload").style.display = "block";
+        const caixa = tamanho * 0.18; // ~10-18% seguro
+        const pos = (tamanho - caixa) / 2;
+
+        // fundo branco
+        ctx.fillStyle = "white";
+        ctx.fillRect(pos, pos, caixa, caixa);
+
+        // texto pequeno
+        ctx.fillStyle = "black";
+        ctx.font = "bold 20px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        ctx.fillText(codigo, tamanho/2, tamanho/2);
+
     });
 
 }
 
-function baixarQR(){
-
-    if(!canvasQR) return;
+function baixar(){
 
     const link = document.createElement("a");
     link.download = "qrcode.png";
-    link.href = canvasQR.toDataURL();
+    link.href = canvas.toDataURL();
     link.click();
+
 }
 
 </script>
