@@ -1,66 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Histórico</title>
 
-<style>
-body{
-    font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
-    text-align:center;
-    padding:20px;
-}
-
-.container{
-    background:white;
-    color:black;
-    padding:20px;
-    border-radius:12px;
-    max-width:350px;
-    margin:auto;
-}
-
-.data{
-    margin-top:15px;
-    font-weight:bold;
-}
-
-.item{
-    padding:10px;
-    border-bottom:1px solid #ccc;
-}
-
-.nome{
-    font-weight:bold;
-}
-
-button{
-    width:100%;
-    padding:12px;
-    margin-top:15px;
-    background:#1f4d2e;
-    color:white;
-    border:none;
-    border-radius:8px;
-}
-</style>
-</head>
-
-<body>
-
-<h2>Histórico</h2>
-
-<div class="container">
-<div id="lista"></div>
-</div>
-
-<button onclick="window.location.href='index.html'">Voltar</button>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
@@ -68,7 +12,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
   authDomain: "merenda-escolar-2.firebaseapp.com",
   projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  storageBucket: "merenda-escolar-2.appspot.com",
   messagingSenderId: "608430650860",
   appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
 };
@@ -76,75 +20,151 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const escolaId = "escola_antonio_barros";
+
+let registros = [];
+let alunosMap = {};
+
 const lista = document.getElementById("lista");
+const total = document.getElementById("total");
+const inputData = document.getElementById("data");
 
-onSnapshot(collection(db, "registros"), (snapshot) => {
-
-    lista.innerHTML = "";
-
-    const registrosPorData = {};
-
-    snapshot.forEach(docSnap => {
-
-        const dados = docSnap.data();
-
-        const dataOriginal = dados.data;
-
-        if(!dataOriginal || !dataOriginal.includes("-")) return;
-
-        const partes = dataOriginal.split("-");
-
-        if(partes.length !== 3) return;
-
-        const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
-
-        if(isNaN(dataObj)) return;
-
-        dataObj.setDate(dataObj.getDate() - 1);
-
-        const data = dataObj.toLocaleDateString('pt-BR');
-
-        if(!registrosPorData[data]){
-            registrosPorData[data] = [];
-        }
-
-        registrosPorData[data].push({
-            nome: dados.nome || "Sem nome",
-            codigo: dados.codigo || "-",
-            hora: dados.hora || "-"
-        });
-
-    });
-
-    const datasOrdenadas = Object.keys(registrosPorData).sort().reverse();
-
-    datasOrdenadas.forEach(data => {
-
-        const titulo = document.createElement("div");
-        titulo.className = "data";
-        titulo.innerText = data;
-
-        lista.appendChild(titulo);
-
-        registrosPorData[data].forEach(item => {
-
-            const div = document.createElement("div");
-            div.className = "item";
-
-            div.innerHTML = `
-                <div class="nome">${item.nome}</div>
-                Código: ${item.codigo}<br>
-                Hora: ${item.hora}
-            `;
-
-            lista.appendChild(div);
-
-        });
-
-    });
-
+onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
+  alunosMap = {};
+  snap.forEach(doc => {
+    const d = doc.data();
+    alunosMap[String(d.codigo)] = d.turma || "Sem turma";
+  });
 });
 
+onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+  registros = [];
+
+  snapshot.forEach(doc => {
+    const d = doc.data();
+
+    registros.push({
+      nome: d.nome || "",
+      codigo: String(d.codigo || ""),
+      turma: alunosMap[String(d.codigo)] || "Sem turma",
+      data: d.data || "",
+      hora: d.hora || ""
+    });
+  });
+
+  renderizar();
+});
+
+function renderizar(){
+  lista.innerHTML = "";
+  let contador = 0;
+
+  const dataSelecionada = inputData.value;
+
+  let dataFormatada = null;
+
+  if (dataSelecionada) {
+    const partes = dataSelecionada.split("-");
+    dataFormatada = partes[2] + "/" + partes[1] + "/" + partes[0];
+  }
+
+  registros.forEach(r => {
+
+    if (dataFormatada && String(r.data) !== String(dataFormatada)) return;
+
+    contador++;
+
+    const div = document.createElement("div");
+    div.className = "item";
+
+    div.innerHTML =
+      r.nome +
+      "<br><small>" + r.turma + "</small>" +
+      "<br><small>" + r.data + " " + (r.hora || "") + "</small>";
+
+    lista.appendChild(div);
+  });
+
+  total.innerText = "Total: " + contador + " alunos";
+}
+
+inputData.addEventListener("change", renderizar);
+</script>
+
+<style>
+body{
+  font-family: Arial;
+  background:#2f4a6d;
+  text-align:center;
+  color:white;
+}
+
+.box{
+  background:white;
+  color:black;
+  padding:20px;
+  border-radius:10px;
+  width:300px;
+  margin:50px auto;
+}
+
+.item{
+  border-bottom:1px solid #ccc;
+  padding:10px;
+}
+
+input{
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:5px;
+  color:white;
+  margin-top:5px;
+}
+
+.btn-voltar{
+  background:green;
+}
+
+.btn-limpar{
+  background:#555;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>S.C.A.E</h1>
+<p>Histórico Geral</p>
+
+<div class="box">
+
+  <input type="date" id="data">
+
+  <button class="btn-limpar" onclick="limparFiltro()">Mostrar todos</button>
+
+  <h3 id="total"></h3>
+
+  <div id="lista"></div>
+
+  <br>
+
+  <button class="btn-voltar" onclick="history.back()">Voltar</button>
+
+</div>
+
+<script>
+function limparFiltro(){
+  document.getElementById("data").value = "";
+  location.reload();
+}
 </script>
 
 </body>
