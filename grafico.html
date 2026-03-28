@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Gráfico</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -10,8 +11,7 @@
 <style>
 body{
     font-family: Arial;
-    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    color:white;
+    background:#f5f5f5;
     text-align:center;
 }
 
@@ -24,32 +24,34 @@ body{
 }
 
 button{
-    width:90%;
+    width:100%;
     padding:12px;
-    margin-top:15px;
+    margin-top:10px;
     background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
+    cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h2>S.C.A.E</h2>
-<p>Frequência da Merenda</p>
-
 <div class="container">
-    <canvas id="grafico"></canvas>
-</div>
 
-<button onclick="window.location.href='index.html'">Voltar</button>
+<h3>Gráfico por Turma</h3>
+
+<canvas id="grafico"></canvas>
+
+<button onclick="voltar()">Voltar</button>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
@@ -63,73 +65,48 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 Corrigir formato de data
-function formatarData(data){
-    if(!data) return null;
+const escolaId = localStorage.getItem("escolaId");
 
-    if(data.includes("/")) return data;
+async function carregarGrafico(){
 
-    if(data.includes("-")){
-        const p = data.split("-");
-        return `${p[2]}/${p[1]}/${p[0]}`;
-    }
+    const snapshot = await getDocs(collection(db, "escolas", escolaId, "alunos"));
 
-    return null;
-}
-
-const ctx = document.getElementById('grafico');
-
-const chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Alunos por dia',
-            data: [],
-            borderRadius: 8
-        }]
-    }
-});
-
-onSnapshot(collection(db, "registros"), (snapshot) => {
-
-    const contagem = {};
-    const controleUnico = new Set();
+    const turmas = {};
 
     snapshot.forEach(doc => {
-        const d = doc.data();
+        const aluno = doc.data();
 
-        const data = formatarData(d.data);
-        const codigo = d.codigo;
-
-        if(!data || !codigo) return;
-
-        // 🔥 evita duplicação
-        const chave = data + "_" + codigo;
-
-        if(controleUnico.has(chave)) return;
-        controleUnico.add(chave);
-
-        if(!contagem[data]){
-            contagem[data] = 0;
+        if(turmas[aluno.turma]){
+            turmas[aluno.turma]++;
+        } else {
+            turmas[aluno.turma] = 1;
         }
-
-        contagem[data]++;
     });
 
-    const datas = Object.keys(contagem).sort((a,b)=>{
-        const [d1,m1,y1] = a.split("/");
-        const [d2,m2,y2] = b.split("/");
-        return new Date(`${y1}-${m1}-${d1}`) - new Date(`${y2}-${m2}-${d2}`);
+    const labels = Object.keys(turmas);
+    const valores = Object.values(turmas);
+
+    new Chart(document.getElementById("grafico"), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Quantidade de alunos',
+                data: valores
+            }]
+        },
+        options: {
+            responsive: true
+        }
     });
 
-    const valores = datas.map(d => contagem[d]);
+}
 
-    chart.data.labels = datas;
-    chart.data.datasets[0].data = valores;
-    chart.update();
+carregarGrafico();
 
-});
+window.voltar = function(){
+    window.location.href = "index.html";
+}
 
 </script>
 
