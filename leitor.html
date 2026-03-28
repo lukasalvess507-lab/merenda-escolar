@@ -143,11 +143,11 @@ async function processarCodigo(codigo){
 
   // salvar registro
   await addDoc(collection(db, "escolas", escolaId, "registros"), {
-    nome: aluno.nome,
-    codigo: codigo,
-    data: hoje
-    hora: new Date().toLocaleTimeString("pt-BR")
-  });
+  nome: aluno.nome,
+  codigo: codigo,
+  data: hoje,
+  hora: new Date().toLocaleTimeString("pt-BR")
+});
 
   beep();
   mostrarSucesso("Leitura realizada");
