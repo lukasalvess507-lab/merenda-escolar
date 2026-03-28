@@ -57,8 +57,33 @@ button{
     border:none;
     border-radius:10px;
     font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
+button:hover{
+    background:#2e6b45;
+    transform:scale(1.05);
+}
+
+
+
+/* ANIMAÇÃO */
+.container{
+    animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+    
 </style>
 </head>
 
