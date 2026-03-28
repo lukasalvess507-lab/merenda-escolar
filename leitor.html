@@ -2,7 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leitor QR - S.C.A.E</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 body{
@@ -11,12 +14,6 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    animation: fadeIn 0.8s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
 }
 
 .container{
@@ -28,14 +25,8 @@ body{
     margin:auto;
 }
 
-#video{
+#reader{
     width:100%;
-    border-radius:10px;
-}
-
-.msg{
-    margin-top:10px;
-    font-weight:bold;
 }
 
 button{
@@ -47,12 +38,6 @@ button{
     border:none;
     border-radius:8px;
     font-weight:bold;
-    cursor:pointer;
-    transition:0.2s;
-}
-
-button:active{
-    transform:scale(0.96);
 }
 </style>
 </head>
@@ -64,18 +49,90 @@ button:active{
 
 <div class="container">
 
-<video id="video"></video>
+<div id="reader"></div>
 
-<div class="msg" id="msg">Aguardando leitura...</div>
+<p id="msg">Aguardando leitura...</p>
 
 <button onclick="voltar()">Voltar</button>
 
 </div>
 
-<script>
-function voltar(){
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const hoje = new Date().toISOString().split("T")[0];
+
+function beep(){
+    const audio = new Audio("https://www.soundjay.com/buttons/sounds/beep-07.mp3");
+    audio.play();
+}
+
+function iniciarLeitor(){
+
+    const html5QrCode = new Html5Qrcode("reader");
+
+    html5QrCode.start(
+        { facingMode: "environment" }, // câmera traseira
+        { fps: 10, qrbox: 250 },
+        async (codigo) => {
+
+            document.getElementById("msg").innerText = "Lendo...";
+
+            const alunoRef = doc(db, "alunos", codigo);
+            const alunoSnap = await getDoc(alunoRef);
+
+            if (!alunoSnap.exists()) {
+                document.getElementById("msg").innerText = "Aluno não encontrado";
+                return;
+            }
+
+            const nome = alunoSnap.data().nome;
+
+            const registroRef = doc(db, "registros", codigo + "_" + hoje);
+            const registroSnap = await getDoc(registroRef);
+
+            if (registroSnap.exists()) {
+                document.getElementById("msg").innerText = "Aluno já registrado hoje";
+                return;
+            }
+
+            const hora = new Date().toLocaleTimeString();
+
+            await setDoc(registroRef, {
+                nome: nome,
+                codigo: codigo,
+                data: hoje,
+                hora: hora
+            });
+
+            beep();
+
+            document.getElementById("msg").innerText = "Registrado: " + nome;
+
+        }
+    );
+}
+
+iniciarLeitor();
+
+window.voltar = function(){
     window.location.href="index.html";
 }
+
 </script>
 
 </body>
