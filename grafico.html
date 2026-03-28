@@ -74,7 +74,16 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
     snapshot.forEach(doc => {
 
         const d = doc.data();
-        const data = d.data;
+        const dataOriginal = d.data;
+
+        if(!dataOriginal) return;
+
+        const partes = dataOriginal.split("-");
+        const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
+
+        dataObj.setDate(dataObj.getDate() - 1);
+
+        const data = dataObj.toLocaleDateString('pt-BR');
 
         if(!contagem[data]){
             contagem[data] = 0;
@@ -106,19 +115,8 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
         },
         options: {
             responsive:true,
-            animation:{
-                duration:800
-            },
-            plugins:{
-                legend:{
-                    display:true
-                }
-            },
-            scales:{
-                y:{
-                    beginAtZero:true
-                }
-            }
+            animation:{ duration:800 },
+            scales:{ y:{ beginAtZero:true } }
         }
     });
 
