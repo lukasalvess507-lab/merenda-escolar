@@ -88,19 +88,21 @@ onSnapshot(collection(db, "registros"), (snapshot) => {
 
         const dados = docSnap.data();
 
-        const dataOriginal = dados.data || "";
+        const dataOriginal = dados.data;
 
-        let data = "Sem data";
+        if(!dataOriginal || !dataOriginal.includes("-")) return;
 
-        if(dataOriginal){
+        const partes = dataOriginal.split("-");
 
-            const partes = dataOriginal.split("-");
-            const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
+        if(partes.length !== 3) return;
 
-            dataObj.setDate(dataObj.getDate() - 1);
+        const dataObj = new Date(partes[0], partes[1]-1, partes[2]);
 
-            data = dataObj.toLocaleDateString('pt-BR');
-        }
+        if(isNaN(dataObj)) return;
+
+        dataObj.setDate(dataObj.getDate() - 1);
+
+        const data = dataObj.toLocaleDateString('pt-BR');
 
         if(!registrosPorData[data]){
             registrosPorData[data] = [];
