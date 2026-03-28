@@ -2,7 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cadastrar - S.C.A.E</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastrar Aluno</title>
 
 <style>
 body{
@@ -11,12 +12,6 @@ body{
     color:white;
     text-align:center;
     padding:20px;
-    animation: fadeIn 0.8s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
 }
 
 .container{
@@ -31,7 +26,7 @@ body{
 input{
     width:100%;
     padding:12px;
-    margin:8px 0;
+    margin:10px 0;
     border-radius:6px;
     border:1px solid #ccc;
 }
@@ -45,16 +40,11 @@ button{
     border:none;
     border-radius:8px;
     font-weight:bold;
-    cursor:pointer;
-    transition:0.2s;
-}
-
-button:active{
-    transform:scale(0.96);
 }
 
 #msg{
     margin-top:10px;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -70,16 +60,56 @@ button:active{
 <input id="nome" placeholder="Nome do aluno">
 
 <button onclick="salvar()">Salvar</button>
-<button onclick="voltar()">Voltar</button>
 
 <p id="msg"></p>
 
+<button onclick="voltar()">Voltar</button>
+
 </div>
 
-<script>
-function voltar(){
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
+  authDomain: "merenda-escolar-2.firebaseapp.com",
+  projectId: "merenda-escolar-2",
+  storageBucket: "merenda-escolar-2.firebasestorage.app",
+  messagingSenderId: "608430650860",
+  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.salvar = async function(){
+
+    const codigo = document.getElementById("codigo").value;
+    const nome = document.getElementById("nome").value;
+
+    if(!codigo || !nome){
+        document.getElementById("msg").innerText = "Preencha todos os campos";
+        return;
+    }
+
+    await setDoc(doc(db, "alunos", codigo), {
+        codigo: codigo,
+        nome: nome
+    });
+
+    document.getElementById("msg").innerText = "Aluno cadastrado com sucesso";
+
+    document.getElementById("codigo").value = "";
+    document.getElementById("nome").value = "";
+
+}
+
+window.voltar = function(){
     window.location.href="index.html";
 }
+
 </script>
 
 </body>
