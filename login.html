@@ -2,159 +2,105 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>S.C.A.E</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
 
 <style>
 body{
     font-family: Arial;
+    margin:0;
     background: linear-gradient(135deg, #1e3a5f, #2a4d69);
-    text-align:center;
-    padding:40px;
     color:white;
-
-    animation: fadeIn 0.8s ease;
-}
-
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
+    text-align:center;
 }
 
 .container{
     background:white;
     color:black;
-    padding:25px;
+    padding:20px;
     border-radius:12px;
-    max-width:320px;
-    margin:auto;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-.logo{
-    width:80px;
-    margin-bottom:10px;
-}
-
-.sigla{
-    font-size:28px;
-    font-weight:bold;
-}
-
-.subtitulo{
-    font-size:13px;
-    color:#555;
-    margin-bottom:20px;
+    max-width:350px;
+    margin:80px auto;
 }
 
 input{
     width:100%;
     padding:12px;
     margin:8px 0;
-    border-radius:6px;
+    border-radius:8px;
     border:1px solid #ccc;
 }
 
 button{
     width:100%;
     padding:14px;
-    margin-top:10px;
+    margin:8px 0;
     background:#1f4d2e;
     color:white;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
     font-size:16px;
-    font-weight:bold;
-    cursor:pointer;
-    transition: all 0.2s;
 }
 
 button:hover{
-    background:#163822;
-}
-
-button:active{
-    transform: scale(0.97);
-}
-
-.link{
-    margin-top:10px;
-    font-size:13px;
-    color:#2f3a73;
-    cursor:pointer;
-}
-
-#msg{
-    margin-top:10px;
-    font-size:13px;
+    background:#163b22;
 }
 </style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_DOMINIO",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_BUCKET",
+    messagingSenderId: "SEU_ID",
+    appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+</script>
+
 </head>
 
 <body>
 
+<h1>S.C.A.E</h1>
+
 <div class="container">
+    <h2>Login da Escola</h2>
 
-<img src="logo.png" class="logo">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha">
 
-<div class="sigla">S.C.A.E</div>
-<div class="subtitulo">Sistema de Controle de Almoço Escolar</div>
-
-<input type="email" id="email" placeholder="E-mail">
-<input type="password" id="senha" placeholder="Senha">
-
-<button onclick="login()">Entrar</button>
-
-<div class="link" onclick="cadastrar()">Criar conta</div>
-
-<p id="msg"></p>
-
+    <button onclick="entrar()">Entrar</button>
 </div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCGA7zSI9Ujwt4Auw9-R2V-SlUc6476zww",
-  authDomain: "merenda-escolar-2.firebaseapp.com",
-  projectId: "merenda-escolar-2",
-  storageBucket: "merenda-escolar-2.firebasestorage.app",
-  messagingSenderId: "608430650860",
-  appId: "1:608430650860:web:eb8dd66b5cf96615c83cc9"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-window.login = function(){
-    document.getElementById("msg").innerText = "Carregando...";
+<script>
+function entrar(){
 
     const email = document.getElementById("email").value;
     const senha = document.getElementById("senha").value;
 
-    signInWithEmailAndPassword(auth, email, senha)
-    .then(() => {
+    firebase.auth().signInWithEmailAndPassword(email, senha)
+    .then((userCredential) => {
+
+        const user = userCredential.user;
+
+        // 🔥 SALVA A ESCOLA CORRETAMENTE
+        localStorage.setItem("escolaId", user.uid);
+        localStorage.setItem("escolaNome", email);
+
         window.location.href = "index.html";
+
     })
-    .catch(() => {
-        document.getElementById("msg").innerText = "Erro ao entrar";
+    .catch((error) => {
+        alert("Erro ao entrar: " + error.message);
     });
 }
-
-window.cadastrar = function(){
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
-
-    createUserWithEmailAndPassword(auth, email, senha)
-    .then(() => {
-        document.getElementById("msg").innerText = "Conta criada com sucesso";
-    })
-    .catch(() => {
-        document.getElementById("msg").innerText = "Erro ao cadastrar";
-    });
-}
-
 </script>
 
 </body>
