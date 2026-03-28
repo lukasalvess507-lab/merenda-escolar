@@ -14,6 +14,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const escolaId = "escola_antonio_barros";
+
 const lista = document.getElementById("lista");
 const total = document.getElementById("total");
 const filtro = document.getElementById("filtroTurma");
@@ -21,77 +23,77 @@ const filtro = document.getElementById("filtroTurma");
 let registros = [];
 let alunosMap = {};
 
-const escolaId = "escola_antonio_barros";
+function carregarAlunos() {
+  onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap) => {
+    alunosMap = {};
+    snap.forEach(doc => {
+      const d = doc.data();
+      alunosMap[String(d.codigo)] = d.turma || "Sem turma";
+    });
+    renderizar();
+  });
+}
 
-function carregarAlunos(){
-    onSnapshot(collection(db, "escolas", escolaId, "alunos"), (snap)=>{
-        alunosMap = {};
-        snap.forEach(doc=>{
-            const d = doc.data();
-            alunosMap[d.codigo] = d.turma || "Sem turma";
+function carregarRegistros() {
+  onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot) => {
+    registros = [];
+    const hoje = new Date().toLocaleDateString("pt-BR");
+
+    snapshot.forEach(doc => {
+      const d = doc.data();
+
+      if (d.data === hoje) {
+        registros.push({
+          nome: d.nome,
+          codigo: String(d.codigo),
+          turma: alunosMap[String(d.codigo)] || "Sem turma"
         });
-        renderizar();
+      }
     });
+
+    montarFiltro();
+    renderizar();
+  });
 }
 
-function carregarRegistros(){
-    onSnapshot(collection(db, "escolas", escolaId, "registros"), (snapshot)=>{
-        registros = [];
-        const hoje = new Date().toLocaleDateString("pt-BR");
+function montarFiltro() {
+  const turmas = new Set();
 
-        snapshot.forEach(doc=>{
-            const d = doc.data();
-            if(d.data === hoje){
-                registros.push({
-                    nome: d.nome,
-                    codigo: d.codigo,
-                    turma: alunosMap[d.codigo] || "Sem turma"
-                });
-            }
-        });
+  registros.forEach(r => {
+    turmas.add(r.turma);
+  });
 
-        montarFiltro();
-        renderizar();
-    });
+  filtro.innerHTML = '<option value="todas">Todas as turmas</option>';
+
+  turmas.forEach(t => {
+    filtro.innerHTML += `<option value="${t}">${t}</option>`;
+  });
 }
 
-function montarFiltro(){
-    const turmas = new Set();
+function renderizar() {
+  lista.innerHTML = "";
+  const turmaSelecionada = filtro.value;
+  let contador = 0;
 
-    registros.forEach(r=>{
-        turmas.add(r.turma);
-    });
+  registros.forEach(r => {
+    if (turmaSelecionada !== "todas" && r.turma !== turmaSelecionada) {
+      return;
+    }
 
-    filtro.innerHTML = '<option value="todas">Todas as turmas</option>';
+    contador++;
 
-    turmas.forEach(t=>{
-        filtro.innerHTML += `<option value="${t}">${t}</option>`;
-    });
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = r.nome + "<br><small>" + r.turma + "</small>";
+
+    lista.appendChild(div);
+  });
+
+  total.innerText = "Total: " + contador + " alunos";
 }
-
-function renderizar(){
-    lista.innerHTML = "";
-    const turmaSelecionada = filtro.value;
-    let contador = 0;
-
-    registros.forEach(r=>{
-        if(turmaSelecionada !== "todas" && r.turma !== turmaSelecionada){
-            return;
-        }
-
-        contador++;
-
-        const div = document.createElement("div");
-        div.className = "item";
-        div.innerHTML = `${r.nome}<br><small>${r.turma}</small>`;
-        lista.appendChild(div);
-    });
-
-    total.innerText = "Total: " + contador + " alunos";
-}
-
-filtro.addEventListener("change", renderizar);
 
 carregarAlunos();
 carregarRegistros();
+
+filtro.addEventListener("change", renderizar);
 </script>
