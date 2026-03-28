@@ -7,10 +7,17 @@
 <style>
 body{
     font-family: Arial;
-    background: linear-gradient(135deg, #1f4d2e, #2f3a73);
+    background: linear-gradient(135deg, #1e3a5f, #2a4d69);
     text-align:center;
     padding:40px;
     color:white;
+
+    animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
 }
 
 .container{
@@ -23,20 +30,16 @@ body{
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-/* LOGO */
 .logo{
     width:80px;
     margin-bottom:10px;
 }
 
-/* SIGLA */
 .sigla{
     font-size:28px;
     font-weight:bold;
-    margin:5px 0;
 }
 
-/* NOME COMPLETO */
 .subtitulo{
     font-size:13px;
     color:#555;
@@ -53,18 +56,20 @@ input{
 
 button{
     width:100%;
-    padding:12px;
+    padding:14px;
     margin-top:10px;
-    background:#2f3a73;
+    background:#1f4d2e;
     color:white;
     border:none;
     border-radius:8px;
+    font-size:16px;
+    font-weight:bold;
     cursor:pointer;
     transition: all 0.2s;
 }
 
 button:hover{
-    background:#253061;
+    background:#163822;
 }
 
 button:active{
@@ -123,6 +128,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 window.login = function(){
+    document.getElementById("msg").innerText = "Carregando...";
+
     const email = document.getElementById("email").value;
     const senha = document.getElementById("senha").value;
 
